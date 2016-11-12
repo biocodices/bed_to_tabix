@@ -3,7 +3,7 @@ from os.path import realpath, dirname, join
 
 import pytest
 
-from ..utils import *
+from ..utils import sort_bed, read_bed
 
 
 FIXTURE_DIR = dirname(realpath(__file__))
@@ -13,11 +13,9 @@ FIXTURE_DIR = dirname(realpath(__file__))
 def unsorted_bedfile():
     return join(FIXTURE_DIR, 'files/unsorted.bed')
 
-
 @pytest.fixture
 def sorted_bedfile():
     return join(FIXTURE_DIR, 'files/sorted.bed')
-
 
 def test_sort_bed(unsorted_bedfile):
     outfile = sort_bed(unsorted_bedfile)
