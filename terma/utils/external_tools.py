@@ -22,5 +22,3 @@ def sort_bed(bedfile, outfile=None):
 
     return outpath
 
-# sort_bed('~/Downloads/test.bed')
-
