@@ -7,8 +7,9 @@ def make_chromosome_series_categorical(series):
     if all(new_series.str.startswith('chr')):
         new_series = new_series.str.replace('chr', '')
 
-    chromosomes = [str(chrom) for chrom in range(1, 23)] + ['X', 'Y']
     new_series = new_series.replace('23', 'X').replace('24', 'Y').astype(str)
+    chromosomes = [str(chrom) for chrom in list(range(1, 23)) + ['X', 'Y']
+                   if str(chrom) in new_series.values]
     new_series = new_series.astype('category', categories=chromosomes,
                                    ordered=True)
     return new_series

@@ -15,7 +15,7 @@ def read_bed(bedfile):
     df = pd.read_table(bedfile, names=BED_COLUMNS)
     df['chrom'] = make_chromosome_series_categorical(df['chrom'])
     df.sort_values(by=['chrom', 'start', 'stop'], inplace=True)
-    return df
+    return df.reset_index(drop=True)
 
 
 def extract_gene_from_feature(bedfile_df):
@@ -62,7 +62,7 @@ def tabix_command_from_chromosome_regions(regions_df, out_directory):
 
     # Generate the tabix command to download 1kG genotypes for this
     # chromosome regions:
-    tabix_command = 'tabix -fh -R {0} {1} | bgzip > {2} &'
+    tabix_command = 'tabix -fh -R {0} {1} | bgzip > {2}'
     tabix_command = tabix_command.format(chrom_bedfile,
             thousand_genomes_chromosome_url(chrom), dest_file)
     return tabix_command, dest_file
