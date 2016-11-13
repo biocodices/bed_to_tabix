@@ -36,3 +36,5 @@ def test_read_bed(sorted_bedfile):
     num_lines = sum(1 for line in open(sorted_bedfile))
     assert len(df) == num_lines
 
+def test_tabix_commands_from_bedfile_df(bedfile_df):
+    pass

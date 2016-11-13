@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from subprocess import run
 from os.path import expanduser, abspath, dirname, basename, join
 
