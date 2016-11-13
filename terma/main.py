@@ -13,7 +13,7 @@ def run_pipeline(bedfile):
     tabix_commands = tabix_commands_from_bedfile_df(bedfile_df,
             out_directory=dirname(bedfile))
 
-    print(len(df['gene'].unique()), 'genes tested')
+    print(len(bedfile_df['gene'].unique()), 'genes tested')
     pp(tabix_commands)
     return True
 

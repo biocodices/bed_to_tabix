@@ -1,5 +1,6 @@
 from os import remove
 from os.path import realpath, dirname, join, isfile
+import re
 
 import pytest
 
@@ -42,14 +43,16 @@ def test_read_bed(sorted_bedfile):
 
 def test_tabix_commands_from_bedfile_df(bedfile_df):
     chromosomes = bedfile_df['chrom'].unique()
-    tabix_commands = tabix_commands_from_bedfile_df(bedfile_df,
-                                                    join(TEST_DIR, 'files'))
+    commands_and_dest_files = tabix_commands_from_bedfile_df(
+            bedfile_df, join(TEST_DIR, 'files'))
+
     # {tabix_cmd1: dest_file1, tabix_cmd2: dest_file2, ... }
-    assert all(cmd.startswith('tabix') for cmd in tabix_commands)
-    assert all(dest_file in cmd for cmd, dest_file in tabix_commands.items())
+    assert all(cmd.startswith('tabix') for cmd in commands_and_dest_files)
+    assert all(dest_file in cmd
+               for cmd, dest_file in commands_and_dest_files.items())
 
     temp_bedfiles = [re.search(r'-R (.+\.bed) ', cmd).group(1)
-                     for cmd in tabix_commands]
+                     for cmd in commands_and_dest_files]
     assert all(isfile(temp_bedfile) for temp_bedfile in temp_bedfiles)
 
     for temp_bedfile in temp_bedfiles:

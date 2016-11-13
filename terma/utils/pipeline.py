@@ -24,7 +24,7 @@ def extract_gene_from_feature(bedfile_df):
     new 'gene' column that contains the values of that extraction.
     """
     df = bedfile_df.copy()
-    df['gene'] = df['feature'].str.extract(r'(\w+)\.', expand=False)
+    df['gene'] = df['feature'].str.extract(r'(.+)\.', expand=False)
     return df
 
 
@@ -36,9 +36,14 @@ def tabix_commands_from_bedfile_df(bedfile_df, out_directory):
     """
     func = partial(tabix_command_from_chromosome_regions,
                    out_directory=out_directory)
-    commands_and_dest_files = bedfile_df.groupby('chrom').apply(func)
 
-    return dict(commands_and_dest_files)
+    commands_and_dest_files = {}
+    for chrom, regions_df in bedfile_df.groupby('chrom'):
+        cmd, dest_file = tabix_command_from_chromosome_regions(regions_df,
+                out_directory=out_directory)
+        commands_and_dest_files[cmd] = dest_file
+
+    return commands_and_dest_files
 
 
 def tabix_command_from_chromosome_regions(regions_df, out_directory):
@@ -48,25 +53,25 @@ def tabix_command_from_chromosome_regions(regions_df, out_directory):
 
     Returns a tuple: (tabix_command, destination_filepath)
     """
+    # Make sure there's only one chromosome in the regions_df
     seen_chromosomes = list(regions_df['chrom'].unique())
-    import q; q(regions_df.iloc[0])
     assert len(seen_chromosomes) == 1
     chrom = seen_chromosomes.pop()
 
-    # Create a bed file just with this chromosome's regions
+    # Create a temporary bed file with this chromosome's regions
+    # It will be used in the tabix command
     chrom_bedfile = join('/tmp', 'chr_{0}.bed'.format(chrom))
     regions_df.to_csv(chrom_bedfile, sep='\t', header=False, index=False)
 
     # Define the destination VCF filename for this chromosome
     dest_file = join(out_directory, 'chr_{0}.vcf.gz'.format(chrom))
 
-    # Generate the tabix command to download 1kG genotypes for this
-    # chromosome regions:
+    # Generate the tabix command to download 1kG genotypes for these regions
     tabix_command = 'tabix -fh -R {0} {1} | bgzip > {2}'
     tabix_command = tabix_command.format(chrom_bedfile,
             thousand_genomes_chromosome_url(chrom), dest_file)
-    return tabix_command, dest_file
 
+    return tabix_command, dest_file
 
 
 def thousand_genomes_chromosome_url(chromosome):
