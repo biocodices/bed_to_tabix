@@ -1,13 +1,15 @@
+from os import system
 from os.path import join
 from functools import partial
+from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 
-from .helpers import make_chromosome_series_categorical
+from helpers import (make_chromosome_series_categorical,
+                     thousand_genomes_chromosome_url)
 
 
 BED_COLUMNS = 'chrom start stop feature'.split()
-THOUSAND_GENOMES_BASE_URL = 'ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/'
 
 
 def read_bed(bedfile):
@@ -37,13 +39,13 @@ def tabix_commands_from_bedfile_df(bedfile_df, out_directory):
     func = partial(tabix_command_from_chromosome_regions,
                    out_directory=out_directory)
 
-    commands_and_dest_files = {}
+    commands_to_run = []
     for chrom, regions_df in bedfile_df.groupby('chrom'):
-        cmd, dest_file = tabix_command_from_chromosome_regions(regions_df,
+        command_to_run = tabix_command_from_chromosome_regions(regions_df,
                 out_directory=out_directory)
-        commands_and_dest_files[cmd] = dest_file
+        commands_to_run.append(command_to_run)
 
-    return commands_and_dest_files
+    return commands_to_run
 
 
 def tabix_command_from_chromosome_regions(regions_df, out_directory):
@@ -71,14 +73,34 @@ def tabix_command_from_chromosome_regions(regions_df, out_directory):
     tabix_command = tabix_command.format(chrom_bedfile,
             thousand_genomes_chromosome_url(chrom), dest_file)
 
-    return tabix_command, dest_file
+    return {'cmd': tabix_command, 'dest_file': dest_file}
 
 
-def thousand_genomes_chromosome_url(chromosome):
-    """Generate the chromosome url from 1000 Genomes. Used for tabix."""
-    version = 'v5a' if chromosome in [str(n) for n in range(1, 23)] else 'v1b'
-    # ^ 1000 Genomes different file naming according to chromosome
+def run_commands(commands_to_run):
+    """
+    Expects a list of dicts with the commands to run and the destination files:
 
-    fn = 'ALL.chr{0}.phase3_shapeit2_mvncall_integrated_{1}.20130502.genotypes.vcf.gz'
-    return THOUSAND_GENOMES_BASE_URL + fn.format(chromosome, version)
+        [{'cmd': command_1, 'dest_file': dest_file_1},
+         {'cmd': command_2, 'dest_file': dest_file_2},
+          ... ]
+
+    Will run the commands in N threads and return a new list with the same
+    entries and a 'success' key:
+
+        [{'cmd': command_1, 'dest_file': dest_file_1, 'success': True},
+         ... ]
+
+    """
+    def syscall(command):
+        import q; q(command['cmd'])
+        result = os.system(command['cmd'])
+        return dict(command).update({'exit_status': result})
+
+    threads = max(13, len(commands_to_run))
+    with ThreadPoolExecutor(max_workers=threads) as pool:
+        results = pool.map(syscall, commands_to_run)
+
+    import ipdb; ipdb.set_trace()
+    # from beeprint import pp; pp(commands_to_run)
+    return results
 

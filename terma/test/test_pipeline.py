@@ -4,7 +4,10 @@ import re
 
 import pytest
 
-from ..utils import sort_bed, read_bed, tabix_commands_from_bedfile_df
+from ..utils import (sort_bed,
+                     read_bed,
+                     tabix_commands_from_bedfile_df,
+                     run_commands)
 
 
 TEST_DIR = dirname(realpath(__file__))
@@ -43,17 +46,23 @@ def test_read_bed(sorted_bedfile):
 
 def test_tabix_commands_from_bedfile_df(bedfile_df):
     chromosomes = bedfile_df['chrom'].unique()
-    commands_and_dest_files = tabix_commands_from_bedfile_df(
-            bedfile_df, join(TEST_DIR, 'files'))
+    commands_to_run = tabix_commands_from_bedfile_df(bedfile_df,
+                                                     join(TEST_DIR, 'files'))
 
     # {tabix_cmd1: dest_file1, tabix_cmd2: dest_file2, ... }
-    assert all(cmd.startswith('tabix') for cmd in commands_and_dest_files)
-    assert all(dest_file in cmd
-               for cmd, dest_file in commands_and_dest_files.items())
+    assert all(cmd['cmd'].startswith('tabix') for cmd in commands_to_run)
+    assert all(cmd['dest_file'] in cmd['cmd'] for cmd in commands_to_run)
 
-    temp_bedfiles = [re.search(r'-R (.+\.bed) ', cmd).group(1)
-                     for cmd in commands_and_dest_files]
+    temp_bedfiles = [re.search(r'-R (.+\.bed) ', cmd['cmd']).group(1)
+                     for cmd in commands_to_run]
     assert all(isfile(temp_bedfile) for temp_bedfile in temp_bedfiles)
 
     for temp_bedfile in temp_bedfiles:
         remove(temp_bedfile)  # Cleanup
+
+#  def test_run_commands(commands):
+    #  for command, dest_file in commands_and_dest_files.items():
+        #  result = run_tabix_commands(command)
+
+#  def test_run_pipeline(unsorted_bedfile):
+    #  assert run_pipeline(unsorted_bedfile)
