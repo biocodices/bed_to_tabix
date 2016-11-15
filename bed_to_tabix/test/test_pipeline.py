@@ -4,10 +4,10 @@ import re
 
 import pytest
 
-from ..utils import (sort_bed,
-                     read_bed,
-                     tabix_commands_from_bedfile_df,
-                     run_commands)
+from bed_to_tabix.lib.pipeline import (sort_bed,
+                                       read_bed,
+                                       tabix_commands_from_bedfile_df,
+                                       run_commands)
 
 
 TEST_DIR = dirname(realpath(__file__))
@@ -53,7 +53,7 @@ def test_tabix_commands_from_bedfile_df(bedfile_df):
     assert all(cmd['cmd'].startswith('tabix') for cmd in commands_to_run)
     assert all(cmd['dest_file'] in cmd['cmd'] for cmd in commands_to_run)
 
-    temp_bedfiles = [re.search(r'-R (.+\.bed) ', cmd['cmd']).group(1)
+    temp_bedfiles = [re.search(r'-B (.+\.bed) ', cmd['cmd']).group(1)
                      for cmd in commands_to_run]
     assert all(isfile(temp_bedfile) for temp_bedfile in temp_bedfiles)
 
