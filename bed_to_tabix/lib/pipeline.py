@@ -92,7 +92,7 @@ def tabix_command_from_chromosome_regions(regions_df, out_directory):
     dest_file = join(out_directory, 'chr_{0}.vcf.gz'.format(chrom))
 
     # Generate the tabix command to download 1kG genotypes for these regions
-    tabix_command = 'tabix -fh -B {0} {1} | bgzip > {2}'
+    tabix_command = 'tabix -fh -R {0} {1} | bgzip > {2}'
     tabix_command = tabix_command.format(chrom_bedfile,
             thousand_genomes_chromosome_url(chrom), dest_file)
 
