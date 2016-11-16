@@ -13,7 +13,38 @@ from bed_to_tabix.lib.helpers import (make_chromosome_series_categorical,
 
 
 BED_COLUMNS = 'chrom start stop feature'.split()
+
 logger = logging.getLogger('bed_to_tabix')
+logging_format = '[{asctime}] {levelname:8} {message}'
+logging.basicConfig(level=logging.DEBUG, format=logging_format, style='{')
+
+
+def run_pipeline(bedfile, parallel_downloads, outfile, gzip):
+    """Get the 1000 Genomes genotypes for the regions in the passed bedfile.
+    Return the name of the resulting .vcf.gz file."""
+    logger.debug('Sort %s' % bedfile)
+    sorted_bedfile = sort_bed(bedfile)
+
+    logger.debug('Read "%s" into a DataFrame' % sorted_bedfile)
+    bedfile_df = read_bed(sorted_bedfile)
+
+    logger.debug('Generate the tabix commands for the given regions')
+    tabix_commands = tabix_commands_from_bedfile_df(bedfile_df,
+            out_directory=dirname(bedfile),
+            parallel_downloads=parallel_downloads)
+
+    logger.debug('Execute the tabix commands to download 1kG genotypes')
+    tabix_results = run_commands(tabix_commands)
+
+    # TODO:
+    # logger.debug('Merge the downloaded .vcf.gz files')
+    # result_vcf = merge_results(tabix_results, outfile, gzip)
+
+    # TODO:
+    # logger.debug('Clean the temp bedfiles and the partial VCF files.')
+    # clean_tempfiles(tabix_commands)
+
+    pp(results)
 
 
 def sort_bed(bedfile, outfile=None):
@@ -41,16 +72,6 @@ def read_bed(bedfile):
     df['chrom'] = make_chromosome_series_categorical(df['chrom'])
     df.sort_values(by=['chrom', 'start', 'stop'], inplace=True)
     return df.reset_index(drop=True)
-
-
-#  def extract_gene_from_feature(bedfile_df):
-    #  """
-    #  Parse the feature ID in search of <gene>.chr1... Return a dataframe with a
-    #  new 'gene' column that contains the values of that extraction.
-    #  """
-    #  df = bedfile_df.copy()
-    #  df['gene'] = df['feature'].str.extract(r'(.+)\.', expand=False)
-    #  return df
 
 
 def tabix_commands_from_bedfile_df(bedfile_df, out_directory):
@@ -96,10 +117,11 @@ def tabix_command_from_chromosome_regions(regions_df, out_directory):
     tabix_command = tabix_command.format(chrom_bedfile,
             thousand_genomes_chromosome_url(chrom), dest_file)
 
-    return {'cmd': tabix_command, 'dest_file': dest_file}
+    return {'cmd': tabix_command, 'dest_file': dest_file,
+            'chrom_bedfile': chrom_bedfile}
 
 
-def run_commands(commands_to_run):
+def run_commands(commands_to_run, parallel_downloads):
     """
     Expects a list of dicts with the commands to run and the destination files:
 
@@ -119,8 +141,7 @@ def run_commands(commands_to_run):
         result = system(command['cmd'])
         return dict(command).update({'exit_status': result})
 
-    threads = max(13, len(commands_to_run))
-    with ThreadPoolExecutor(max_workers=threads) as pool:
+    with ThreadPoolExecutor(max_workers=parallel_downloads) as pool:
         results = pool.map(syscall, commands_to_run)
 
         for result in results:
@@ -128,3 +149,8 @@ def run_commands(commands_to_run):
 
     return results
 
+def merge_results(tabix_commands):
+    pass
+
+def clean_tempfiles(tabix_commands):
+    pass
