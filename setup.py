@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+from bed_to_tabix.package_info import *
 
 
 dependencies = [
@@ -6,18 +7,18 @@ dependencies = [
     'docopt',
 ]
 
-setup(name='bed_to_tabix',
-      version='1.0',
-      description='Download the genotypes of the regions in a .bed file from 1kG',
-      url='http://github.com/biocodices/bed_to_tabix',
-      author='Juan Manuel Berros',
-      author_email='juanma.berros@gmail.com',
+setup(name=PROGRAM_NAME,
+      version=VERSION,
+      description=DESCRIPTION,
+      url=URL,
+      author=AUTHOR,
+      author_email=AUTHOR_EMAIL,
       install_requires=dependencies,
       license='MIT',
       packages=find_packages(),
       entry_points={
           'console_scripts': [
-            'bed_to_tabix = bed_to_tabix.main:main'
+            'bed_to_tabix = bed_to_tabix.bed_to_tabix:main'
           ]
       },
       zip_safe=False)
