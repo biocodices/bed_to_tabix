@@ -4,6 +4,8 @@
 
 - Python 3.5 or greater. You can download and install from [Anaconda](https://www.continuum.io/downloads)
 - `tabix` and `bgzip` command line utilities (>= 1.3.2). You can download and install both from [htslib.org](http://www.htslib.org/download). Choose the `htslib` package to download. If you have an old `tabix` version, update it, since the command line interface changed from older versions. After downloading the package:
+- A working Internet connection without any weird proxy settings. I know `tabix`
+  doesn't work in some University network settings.
 
 ```bash
 tar xvf htslib-1.3.2.tar.bz2  # Replace with the exact filename you downloaded
@@ -43,4 +45,5 @@ bed_to_tabix --help
 ```
 
 You just have to pass the path of a `.bed` file, and `bed_to_tabix` will download
-the genotypes of the 2,504 samples from The 1,000 Genomes Project into a `.vcf.gz`.
+the genotypes of the 2,504 samples from The 1,000 Genomes Project into a single
+VCF file.
