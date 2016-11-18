@@ -2,10 +2,14 @@
 
 ## Requirements
 
-- Python 3.5 or greater. You can download and install from [Anaconda](https://www.continuum.io/downloads)
-- `tabix` and `bgzip` command line utilities (>= 1.3.2). You can download and install both from [htslib.org](http://www.htslib.org/download). Choose the `htslib` package to download. If you have an old `tabix` version, update it, since the command line interface changed from older versions. After downloading the package:
 - A working Internet connection without any weird proxy settings. I know `tabix`
   doesn't work in some University network settings.
+- Python 3.5 or greater. You can download and install from [Anaconda](https://www.continuum.io/downloads)
+- `tabix` and `bgzip` command line utilities (>= 1.3.2). You can download both from [htslib.org](http://www.htslib.org/download). Choose the `htslib` package to download. If you have an old `tabix` version, update it, since the command line interface changed from older versions.
+- `bcftools`. You can download it from the same link as `tabix`, [htslib.org](http://www.htslib.org/download).
+
+After downloading the package, you can install it with these commands
+(replace `htslib` with `bcftools` to install the latter):
 
 ```bash
 tar xvf htslib-1.3.2.tar.bz2  # Replace with the exact filename you downloaded
