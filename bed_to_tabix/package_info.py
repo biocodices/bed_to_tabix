@@ -5,5 +5,10 @@ PACKAGE_INFO = dict(
     DATE = '20 Nov 2016',
     AUTHOR = 'Juan Manuel Berros',
     AUTHOR_EMAIL = 'juanma.berros@gmail.com',
-    URL = 'https://github.com/biocodices/bed_to_tabix'
+    URL = 'https://github.com/biocodices/bed_to_tabix',
+    DEPENDENCIES = [
+        'pandas',
+        'docopt',
+        'coloredlogs'
+    ]
 )
