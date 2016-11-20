@@ -38,13 +38,6 @@ You need `git` for this. In case you don't have it, `sudo apt-get install git` w
 
 ```bash
 git clone https://github.com/biocodices/bed_to_tabix
-```
-
-If you don't have and don't want to install `git`, you can just visit the [github repo](https://github.com/biocodices/bed_to_tabix), download the `.zip` and extract it.
-
-Then:
-
-```bash
 cd bed_to_tabix
 python setup.py install
 ```
