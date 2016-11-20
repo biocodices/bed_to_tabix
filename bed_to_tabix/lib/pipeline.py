@@ -1,9 +1,11 @@
 from os import system, remove
 from os.path import expanduser, abspath, dirname, basename, join
 from concurrent.futures import ThreadPoolExecutor
+import time
+import datetime
 import logging
-import coloredlogs
 
+import coloredlogs
 import pandas as pd
 
 from bed_to_tabix.lib.helpers import (make_chromosome_series_categorical,
@@ -22,7 +24,7 @@ def run_pipeline(bedfiles, parallel_downloads, outfile, gzip=True,
                  dry_run=False, http=False):
     """Get the 1000 Genomes genotypes for the regions in the passed bedfile.
     Return the name of the resulting .vcf.gz file."""
-
+    t0 = time.time()
     logger.info('Read %s' % ', '.join(bedfiles))
     bedfile_df = read_beds(bedfiles)
 
@@ -44,11 +46,10 @@ def run_pipeline(bedfiles, parallel_downloads, outfile, gzip=True,
     result_vcf = merge_vcfs(vcfs, outfile, gzip)
 
     logger.info('Clean the temp bedfiles and the partial VCF files')
-    for tabix_command in tabix_commands:
-        remove(tabix_command['chrom_bedfile'])
-        remove(tabix_command['dest_file'])
+    clean_tempfiles(tabix_commands)
 
-    logger.info('Done! Check %s' % outfile)
+    elapsed_time = datetime.timedelta(seconds=time.time() - t0)
+    logger.info('Done! Took {}. Check {}'.format(elapsed_time, outfile))
 
 
 def read_beds(bedfiles):
@@ -102,12 +103,17 @@ def tabix_command_from_chromosome_regions(regions_df, out_directory, http=False)
     # Define the destination VCF filename for this chromosome
     dest_file = join(out_directory, 'chr_{0}.vcf.gz'.format(chrom))
 
+    chrom_1kg_url = thousand_genomes_chromosome_url(chrom, http)
     # Generate the tabix command to download 1kG genotypes for these regions
-    tabix_command = 'tabix -fh -R {0} {1} | bgzip > {2}'.format(chrom_bedfile,
-            thousand_genomes_chromosome_url(chrom, http), dest_file)
+    tabix_command = 'tabix -fh -R {0} {1} | bgzip > {2}'.format(
+            chrom_bedfile, chrom_1kg_url, dest_file)
 
-    return {'cmd': tabix_command, 'dest_file': dest_file,
-            'chrom_bedfile': chrom_bedfile}
+    chrom_index_file = basename(chrom_1kg_url) + '.tbi'
+
+    return {'cmd': tabix_command,
+            'dest_file': dest_file,
+            'chrom_bedfile': chrom_bedfile,
+            'chrom_index_file': chrom_index_file}
 
 
 def run_commands(commands_to_run, parallel_downloads):
@@ -139,6 +145,10 @@ def run_commands(commands_to_run, parallel_downloads):
 
 
 def merge_vcfs(vcfs, outfile, gzip=True):
+    """
+    Merge a list of VCF files by calling bcftools. Return the filename of the
+    resulting VCF, gzipped by default.
+    """
     command_to_run = 'bcftools concat {} > {}'.format(' '.join(vcfs), outfile)
 
     if gzip:
@@ -151,4 +161,9 @@ def merge_vcfs(vcfs, outfile, gzip=True):
 
 
 def clean_tempfiles(tabix_commands):
-    pass
+    """Remove .vcf.gz.tbi index files and single chromosome VCF files."""
+    for tabix_command in tabix_commands:
+        from beeprint import pp; pp(tabix_command)
+        remove(tabix_command['dest_file'])
+        remove(tabix_command['chrom_bedfile'])
+        remove(tabix_command['chrom_index_file'])

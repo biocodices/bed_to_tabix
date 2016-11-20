@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Welcome to BED-TO-TABIX! This tool will download the genotypes from The 1,000
-Genomes Proyect's at the regions defined in a .bed file.
+Genomes Proyect's at the regions defined in one or more .bed files.
 
 Usage:
     bed_to_tabix --in BEDFILE... [--out VCFFILE] [--threads N] [--unzipped]
@@ -9,27 +9,29 @@ Usage:
     bed_to_tabix (--help | --version)
 
 Options:
-    --in BEDFILE... One or more input .bed file(s) with the genomic
-                    regions to download. Mandatory argument(s).
+    --in BEDFILE...   One or more input .bed file(s) with the genomic
+                      regions to download. Mandatory argument(s). Repeat
+                      the --in flag with a different .bed each time for more
+                      than one input file.
 
-    --out VCFFILE   Output filepath for the VCF. If not set,
-                    it will use the input filepath and replace
-                    .bed with .vcf.gz. WARNING: if a file with the
-                    same filename exists, it will be overwritten.
+    --out VCFFILE     Output filepath for the VCF. You don't need to add
+                      '.vcf' to the name. If not set, bed_to_tabix will
+                      use the input filepath and replace .bed with .vcf.gz.
+                      WARNING: if a file with the same filename exists, it
+                      will be overwritten.
 
-    --threads N     Perform the downloads in N parallel threads.
-                    Default: 5. Don't go too high or you might
-                    get banned.
+    --threads N       Perform the downloads in N parallel threads.
+                      Default: 3. Don't go too high or you might get banned.
 
-    --unzipped      If set, the downloaded VCF will not be gzipped.
+    --unzipped        If set, the downloaded VCF will not be gzipped.
 
-    --dry-run       If set, it will just print the tabix commands
-                    to STDOUT, instead of running them.
+    --dry-run         If set, it will just print the tabix commands to
+                      STDOUT, instead of running them.
 
-    --http          Use HTTP 1000 Genomes URLs instead of FTP.
+    --http            Use HTTP 1000 Genomes URLs instead of FTP.
 
-    -h --help       Show this help.
-    -v --version    Show version.
+    -h --help         Show this help.
+    -v --version      Show version.
 """
 
 import sys
@@ -50,7 +52,10 @@ def parse_arguments(arguments):
         print(msg.format(**PACKAGE_INFO))
         sys.exit()
 
-    arguments['--threads'] = int(arguments['--threads']) or 5
+    if arguments['--threads']:
+        arguments['--threads'] = int(arguments['--threads'])
+    else:
+        arguments['--threads'] = 3
 
     if not arguments['--out']:
         filename = '__'.join(basename(bed).replace('.bed', '')
