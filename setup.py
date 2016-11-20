@@ -12,5 +12,7 @@ setup(name = PACKAGE_INFO['PROGRAM_NAME'],
       license = 'MIT',
       packages = find_packages(),
       entry_points = {
-          'console_scripts': [
-            'bed_to_tabix = bed_to_tabix.bed_to_tabix:main'
+          'console_scripts': ['bed_to_tabix = bed_to_tabix.bed_to_tabix:main']
+      },
+      zip_safe=False)
+
