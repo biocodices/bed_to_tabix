@@ -44,14 +44,15 @@ python setup.py install
 
 ## Usage
 
-Don't set `--threads` too high or you might get banned!
+Don't set `--threads` too high or you might get banned! The default of 3 seems
+to be fine, but you can experiment with higher numbers at your own risk.
 
 ```bash
 # Download the regions in regions1.bed to regions1.vcf.gz
 bed_to_tabix --in regions1.bed
 
-# Download the regions in regions1.bed, 3 downloads at a time, to 1kg.vcf
-bed_to_tabix --in regions1.bed --threads 3 --unzipped --out 1kg
+# Download the regions in regions1.bed, 5 downloads at a time, to 1kg.vcf
+bed_to_tabix --in regions1.bed --threads 5 --unzipped --out 1kg
 
 # Download the regions in both bed files to regions1__regions2.vcf.gz
 bed_to_tabix --in regions1.bed --in regions2.bed
