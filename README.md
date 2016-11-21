@@ -60,3 +60,11 @@ bed_to_tabix --in regions1.bed --in regions2.bed
 
 You will get a [gzipped] VCF file with the genotypes from the 2,504 samples in
 the 1kG Proyect.
+
+## For devs
+
+Contributions are welcome! To run the small test suite:
+
+```bash
+pytest -q tests
+```

@@ -15,7 +15,6 @@ from bed_to_tabix.lib.helpers import (make_chromosome_series_categorical,
 BED_COLUMNS = 'chrom start stop feature'.split()
 
 logger = logging.getLogger('bed_to_tabix')
-#  logging.basicConfig(level=logging.INFO)
 coloredlogs.DEFAULT_LOG_FORMAT = '[@%(hostname)s %(asctime)s] %(message)s'
 coloredlogs.install(level='INFO')
 
@@ -163,7 +162,6 @@ def merge_vcfs(vcfs, outfile, gzip=True):
 def clean_tempfiles(tabix_commands):
     """Remove .vcf.gz.tbi index files and single chromosome VCF files."""
     for tabix_command in tabix_commands:
-        from beeprint import pp; pp(tabix_command)
         remove(tabix_command['dest_file'])
         remove(tabix_command['chrom_bedfile'])
         remove(tabix_command['chrom_index_file'])
