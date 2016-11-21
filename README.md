@@ -66,5 +66,5 @@ the 1kG Proyect.
 Contributions are welcome! To run the small test suite:
 
 ```bash
-pytest -q tests
+pytest -q bed_to_tabix/test
 ```
