@@ -1,3 +1,6 @@
+from itertools import zip_longest
+
+
 _base_path = 'ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/'
 THOUSAND_GENOMES_FTP = 'ftp://' + _base_path
 THOUSAND_GENOMES_HTTP = 'http://' + _base_path
@@ -29,3 +32,24 @@ def thousand_genomes_chromosome_url(chromosome, http=False):
     fn = 'ALL.chr{0}.phase3_shapeit2_mvncall_integrated_{1}.20130502.genotypes.vcf.gz'
     base_url = THOUSAND_GENOMES_HTTP if http else THOUSAND_GENOMES_FTP
     return base_url + fn.format(chromosome, version)
+
+
+def grouped(the_list, group_size):
+    """Return a list items in groups of group_size."""
+    groups = zip_longest(*(iter(the_list), ) * group_size)
+    groups = [list(group) for group in groups]
+    for group in groups:
+        if None in group:
+            group.remove(None)
+    return groups
+
+
+def bed_stats(bedfile_df):
+    stats = {
+            'n_regions': len(bedfile_df),
+            'total_bases': bedfile_df.apply(
+                lambda row: row['stop'] - row['start'], axis=1).sum(),
+            'n_chromosomes': len(bedfile_df['chrom'].unique())
+        }
+    return stats
+

@@ -1,16 +1,19 @@
 from os import remove, getpid
 from os.path import basename, join
-from concurrent.futures import ThreadPoolExecutor
-from subprocess import check_call
+import concurrent.futures.thread
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from subprocess import check_output, CalledProcessError, STDOUT
 import time
-import datetime
 import logging
 from glob import glob
 
 import pandas as pd
+from humanfriendly import format_timespan
 
 from bed_to_tabix.package_info import PACKAGE_INFO
 from bed_to_tabix.lib.helpers import (make_chromosome_series_categorical,
+                                      grouped,
+                                      bed_stats,
                                       thousand_genomes_chromosome_url,
                                       THOUSAND_GENOMES_TBI_PATTERN)
 
@@ -22,13 +25,17 @@ BED_COLUMNS = 'chrom start stop feature'.split()
 logger = logging.getLogger(PACKAGE_INFO['PROGRAM_NAME'])
 
 
-def run_pipeline(bedfiles, parallel_downloads, outfile, gzip=True,
+def run_pipeline(bedfiles, threads, outfile, gzip=True,
                  dry_run=False, http=False):
     """Get the 1000 Genomes genotypes for the regions in the passed bedfile.
     Return the name of the resulting .vcf.gz file."""
     t0 = time.time()
     logger.info('Read %s' % ', '.join(bedfiles))
     bedfile_df = read_beds(bedfiles)
+
+    msg = ('Found {n_regions} regions in {n_chromosomes} chromosomes, '
+           'spanning {total_bases} bases')
+    logger.info(msg.format(**bed_stats(bedfile_df)))
 
     logger.info('Generate the tabix commands for the given regions')
     tabix_commands = tabix_commands_from_bedfile_df(bedfile_df, http=http)
@@ -38,17 +45,18 @@ def run_pipeline(bedfiles, parallel_downloads, outfile, gzip=True,
         print(*[command['cmd'] for command in tabix_commands], sep='\n')
         return
 
-    logger.info('Execute the tabix commands to download 1kG genotypes')
-    run_parallel_commands(tabix_commands, threads=parallel_downloads)
+    logger.info('Execute tabix in batches of {} to download the '
+                '1kG genotypes (this might take a while!)'.format(threads))
+    run_parallel_commands(tabix_commands, threads=threads)
     # ^ If any tabix call fails, a CalledProcessError will be raised and
     # execution will stop.
     # TODO: Condiser handling CalledProcessError?
 
-    logger.info('Merge the downloaded .vcf.gz files:')
+    logger.info('Merge the downloaded .vcf.gz files')
     vcfs = [result['dest_file'] for result in tabix_commands]  # tabix_results
     result_vcf = merge_vcfs(vcfs, outfile, gzip)
 
-    elapsed_time = datetime.timedelta(seconds=time.time() - t0)
+    elapsed_time = format_timespan(time.time() - t0)
     logger.info('Done! Took {}. Check {}'.format(elapsed_time, outfile))
 
 
@@ -132,11 +140,19 @@ def run_parallel_commands(commands_to_run, threads):
 
     """
     def syscall(command):
-        logger.info('Running command: %s' % command['cmd'])
-        check_call(command['cmd'], shell=True)
+        ix = id(command['cmd'])
+        logger.debug('Running command {}: {}'.format(ix, command['cmd']))
+        output = check_output(command['cmd'], shell=True, stderr=STDOUT)
+        logger.debug('Output {}: {}'.format(ix, output.decode('utf-8')))
 
-    with ThreadPoolExecutor(max_workers=threads) as executor:
-        executor.map(syscall, commands_to_run)
+    threads = min(threads, len(commands_to_run))
+    for group_of_commands in grouped(commands_to_run, group_size=threads):
+        # I have to group the commands in groups of size=threads before using
+        # ThreadPoolExecutor because otherwise the extra commands can't be
+        # easily stopped with CTRL-C or whenever an Exception is raised.
+        with ThreadPoolExecutor(len(group_of_commands)) as executor:
+            results = executor.map(syscall, group_of_commands)
+            list(results)  # raises Exception from any of the threads
 
 
 def merge_vcfs(vcfs, outfile, gzip=True):
@@ -149,15 +165,14 @@ def merge_vcfs(vcfs, outfile, gzip=True):
     if gzip:
         command_to_run = command_to_run.replace('>', '| bgzip >')
 
-    logger.info('Running: %s' % command_to_run)
-    check_call(command_to_run, shell=True)
+    check_output(command_to_run, shell=True, stderr=STDOUT)
 
     return outfile
 
 
 def cleanup_temp_files():
     """Remove all temp BED, VCF and tbi files found."""
-    for fn in glob(join(TEMP_DIR, TEMP_PREFIX + '*')):
+    for fn in sorted(glob(join(TEMP_DIR, TEMP_PREFIX + '*'))):
         logger.debug('Cleanup: remove {}'.format(fn))
         remove(fn)
 

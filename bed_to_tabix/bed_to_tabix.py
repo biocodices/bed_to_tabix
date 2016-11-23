@@ -5,7 +5,7 @@ The 1,000 Genomes Proyect's at the regions defined in one or more BED files.
 
 Usage:
     bed_to_tabix --in BEDFILE... [--out VCFFILE] [--threads N] [--unzipped]
-                                 [--dry-run] [--http] [-f]
+                                 [--dry-run] [--http] [-f] [--debug]
     bed_to_tabix (--help | --version)
 
 Options:
@@ -29,6 +29,9 @@ Options:
     --dry-run         If set, it will just print the tabix commands to
                       STDOUT, instead of running them.
 
+    --debug           Run in DEBUG logging mode. It will print the comands
+                      being run at each step.
+
     --http            Use HTTP 1000 Genomes URLs instead of FTP.
 
     -h --help         Show this help.
@@ -39,6 +42,7 @@ import sys
 from os import getcwd
 from os.path import basename, join, isfile
 import logging
+from subprocess import CalledProcessError
 
 from docopt import docopt
 import coloredlogs
@@ -88,17 +92,22 @@ def main():
     arguments = parse_arguments(docopt(__doc__))
 
     coloredlogs.DEFAULT_LOG_FORMAT = '[@%(hostname)s %(asctime)s] %(message)s'
-    coloredlogs.install(level='INFO')
+    loglevel = 'DEBUG' if arguments['--debug'] else 'INFO'
+    coloredlogs.install(level=loglevel)
 
     try:
         run_pipeline(bedfiles=arguments['--in'],
-                    parallel_downloads=arguments['--threads'],
+                    threads=arguments['--threads'],
                     outfile=arguments['--out'],
                     gzip=(not arguments['--unzipped']),
                     dry_run=arguments['--dry-run'],
                     http=arguments['--http'])
     except KeyboardInterrupt:
-        logger.critical('User stopped the program. Cleanup and exit.')
+        logger.warning('User stopped the program. Cleanup and exit.')
+        sys.exit()
+    except CalledProcessError as error:
+        msg = 'The following command failed (code: {0}). Cleanup and exit: {1}'
+        logger.warning(msg.format(*error.args))
         sys.exit()
     finally:
         cleanup_temp_files()
