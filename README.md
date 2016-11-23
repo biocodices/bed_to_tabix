@@ -1,12 +1,12 @@
 # `bed_to_tabix`
 
-`bed_to_tabix` will download a single VCF file with the 2,504 genotypes from 
+`bed_to_tabix` will download a gzipped VCF file with the 2,504 genotypes from 
 The 1,000 Genomes Project at the regions defined in one or more BED files.
 The utility will specifically handle for you the BED sorting, merging of many
-BEDs, **parallel-downloading** the different chromosome URLs with `tabix`
-(you can even use HTTP URLs ports in case your FTP traffic is blocked)
-and it will merge the resulting VCFs in a single gzipped VCF. Afterwards, it
-will perform a cleanup of the temporary files.
+BEDs, **parallel-downloading** of the different chromosome variants with `tabix`
+(you can even use HTTP URLs in case your FTP traffic is blocked) and it will
+merge the resulting VCFs in a single gzipped VCF. Afterwards, it will perform
+a cleanup of the temporary files, so you're done with a single results file.
 
 ## Requirements
 
