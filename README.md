@@ -66,8 +66,8 @@ bed_to_tabix --in regions1.bed --threads 10 --unzipped --out 1kg
 bed_to_tabix --in regions1.bed --in regions2.bed
 ```
 
-You will get a [gzipped] VCF file with the genotypes from the 2,504 samples in
-the 1kG Proyect.
+You will get a [gzipped] VCF file with the variant genotypes from the 2,504
+samples in the 1kG Proyect, at the regions listed in your BED(s).
 
 In case you can't connect to port 21 (FTP) --I know this is usual in some
 University networks--, you can use the HTTP URLs from 1000 Genomes:
