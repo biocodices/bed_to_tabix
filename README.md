@@ -51,8 +51,9 @@ python setup.py install
 
 ## Usage
 
-I'm not sure if there's any risk of getting banned if you set `--threads` too
-high, so experiment at your own risk.
+I'm not sure if there's any risk of getting banned if you perform too many
+parallel downloads from 1kG servers, so experiment with `--threads` at your own
+risk.
 
 ```bash
 # Download the regions in regions1.bed to regions1.vcf.gz
