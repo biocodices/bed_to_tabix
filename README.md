@@ -8,6 +8,8 @@ BEDs, **parallel-downloading** of the different chromosome variants with `tabix`
 merge the resulting VCFs in a single gzipped VCF. Afterwards, it will perform
 a cleanup of the temporary files, so you're done with a single results file.
 
+![Screenshot](screen.png)
+
 ## Requirements
 
 - A working Internet connection.
