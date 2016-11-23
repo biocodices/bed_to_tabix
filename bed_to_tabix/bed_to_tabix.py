@@ -20,8 +20,7 @@ Options:
                       WARNING: if a file with the same filename exists, it
                       will be overwritten.
 
-    --threads N       Perform the downloads in N parallel threads.
-                      Default: 3. Don't go too high or you might get banned.
+    --threads N       Perform the downloads in N parallel threads. Default: 6.
 
     --unzipped        If set, the downloaded VCF will not be gzipped.
 
@@ -46,6 +45,10 @@ from bed_to_tabix.package_info import PACKAGE_INFO
 from bed_to_tabix.lib.pipeline import run_pipeline
 
 
+defaults = {
+        '--threads': 6,
+    }
+
 def parse_arguments(arguments):
     if arguments['--version']:
         msg = '{PROGRAM_NAME} {VERSION} ({DATE}) by {AUTHOR}\nCheck: {URL}'
@@ -55,7 +58,7 @@ def parse_arguments(arguments):
     if arguments['--threads']:
         arguments['--threads'] = int(arguments['--threads'])
     else:
-        arguments['--threads'] = 3
+        arguments['--threads'] = defaults['--threads']
 
     if not arguments['--out']:
         filename = '__'.join(basename(bed).replace('.bed', '')
