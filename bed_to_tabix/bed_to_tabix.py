@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
-Welcome to BED-TO-TABIX! This tool will download the genotypes from The 1,000
-Genomes Proyect's at the regions defined in one or more .bed files.
+Welcome to BED-TO-TABIX! This tool will download the variant genotypes from
+The 1,000 Genomes Proyect's at the regions defined in one or more BED files.
 
 Usage:
     bed_to_tabix --in BEDFILE... [--out VCFFILE] [--threads N] [--unzipped]
-                                 [--dry-run] [--http]
+                                 [--dry-run] [--http] [-f]
     bed_to_tabix (--help | --version)
 
 Options:
@@ -24,6 +24,8 @@ Options:
 
     --unzipped        If set, the downloaded VCF will not be gzipped.
 
+    -f --force        If set, it will overwrite the output file if it exists.
+
     --dry-run         If set, it will just print the tabix commands to
                       STDOUT, instead of running them.
 
@@ -35,15 +37,17 @@ Options:
 
 import sys
 from os import getcwd
-from os.path import dirname, basename, join
+from os.path import basename, join, isfile
 import logging
 
 from docopt import docopt
-from beeprint import pp
+import coloredlogs
 
 from bed_to_tabix.package_info import PACKAGE_INFO
-from bed_to_tabix.lib.pipeline import run_pipeline
+from bed_to_tabix.lib.pipeline import run_pipeline, cleanup_temp_files
 
+
+logger = logging.getLogger(PACKAGE_INFO['PROGRAM_NAME'])
 
 defaults = {
         '--threads': 6,
@@ -71,18 +75,33 @@ def parse_arguments(arguments):
     if not arguments['--unzipped']:
         arguments['--out'] += '.gz'
 
+    if '--force' not in arguments and isfile(arguments['--out']):
+        msg = ('Output file {} already exists!\nUse --force or -f to overwrite '
+               'it or change the output filename with --out.')
+        logger.warning(msg.format(arguments['--out']))
+        sys.exit()
+
     return arguments
 
 
 def main():
     arguments = parse_arguments(docopt(__doc__))
 
-    run_pipeline(bedfiles=arguments['--in'],
-                 parallel_downloads=arguments['--threads'],
-                 outfile=arguments['--out'],
-                 gzip=(not arguments['--unzipped']),
-                 dry_run=arguments['--dry-run'],
-                 http=arguments['--http'])
+    coloredlogs.DEFAULT_LOG_FORMAT = '[@%(hostname)s %(asctime)s] %(message)s'
+    coloredlogs.install(level='INFO')
+
+    try:
+        run_pipeline(bedfiles=arguments['--in'],
+                    parallel_downloads=arguments['--threads'],
+                    outfile=arguments['--out'],
+                    gzip=(not arguments['--unzipped']),
+                    dry_run=arguments['--dry-run'],
+                    http=arguments['--http'])
+    except KeyboardInterrupt:
+        logger.critical('User stopped the program. Cleanup and exit.')
+        sys.exit()
+    finally:
+        cleanup_temp_files()
 
 
 if __name__ == '__main__':

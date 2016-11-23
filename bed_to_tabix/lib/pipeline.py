@@ -1,22 +1,25 @@
-from os import system, remove
-from os.path import expanduser, abspath, dirname, basename, join
+from os import remove, getpid
+from os.path import basename, join
 from concurrent.futures import ThreadPoolExecutor
+from subprocess import check_call
 import time
 import datetime
 import logging
+from glob import glob
 
-import coloredlogs
 import pandas as pd
 
+from bed_to_tabix.package_info import PACKAGE_INFO
 from bed_to_tabix.lib.helpers import (make_chromosome_series_categorical,
-                                      thousand_genomes_chromosome_url)
+                                      thousand_genomes_chromosome_url,
+                                      THOUSAND_GENOMES_TBI_PATTERN)
 
 
+TEMP_PREFIX = '{}_{}'.format(PACKAGE_INFO['PROGRAM_NAME'], getpid())
+TEMP_DIR = '/tmp'
 BED_COLUMNS = 'chrom start stop feature'.split()
 
-logger = logging.getLogger('bed_to_tabix')
-coloredlogs.DEFAULT_LOG_FORMAT = '[@%(hostname)s %(asctime)s] %(message)s'
-coloredlogs.install(level='INFO')
+logger = logging.getLogger(PACKAGE_INFO['PROGRAM_NAME'])
 
 
 def run_pipeline(bedfiles, parallel_downloads, outfile, gzip=True,
@@ -28,8 +31,7 @@ def run_pipeline(bedfiles, parallel_downloads, outfile, gzip=True,
     bedfile_df = read_beds(bedfiles)
 
     logger.info('Generate the tabix commands for the given regions')
-    tabix_commands = tabix_commands_from_bedfile_df(bedfile_df,
-            out_directory=dirname(outfile), http=http)
+    tabix_commands = tabix_commands_from_bedfile_df(bedfile_df, http=http)
 
     if dry_run:
         logger.info('Dry run! I would run these tabix commands:')
@@ -37,15 +39,14 @@ def run_pipeline(bedfiles, parallel_downloads, outfile, gzip=True,
         return
 
     logger.info('Execute the tabix commands to download 1kG genotypes')
-    tabix_results = run_commands(tabix_commands,
-                                 parallel_downloads=parallel_downloads)
+    run_parallel_commands(tabix_commands, threads=parallel_downloads)
+    # ^ If any tabix call fails, a CalledProcessError will be raised and
+    # execution will stop.
+    # TODO: Condiser handling CalledProcessError?
 
     logger.info('Merge the downloaded .vcf.gz files:')
     vcfs = [result['dest_file'] for result in tabix_commands]  # tabix_results
     result_vcf = merge_vcfs(vcfs, outfile, gzip)
-
-    logger.info('Clean the temp bedfiles and the partial VCF files')
-    clean_tempfiles(tabix_commands)
 
     elapsed_time = datetime.timedelta(seconds=time.time() - t0)
     logger.info('Done! Took {}. Check {}'.format(elapsed_time, outfile))
@@ -67,7 +68,7 @@ def read_bed(bedfile):
     return df.reset_index(drop=True)
 
 
-def tabix_commands_from_bedfile_df(bedfile_df, out_directory, http=False):
+def tabix_commands_from_bedfile_df(bedfile_df, http=False):
     """
     Generate the tabix commands to download 1000 Genomes genotypes for the
     regions included in a bedfile, passed as a DataFrame. Returns a dictionary
@@ -76,13 +77,13 @@ def tabix_commands_from_bedfile_df(bedfile_df, out_directory, http=False):
     commands_to_run = []
     for chrom, regions_df in bedfile_df.groupby('chrom'):
         command_to_run = tabix_command_from_chromosome_regions(regions_df,
-                out_directory=out_directory, http=http)
+                                                               http=http)
         commands_to_run.append(command_to_run)
 
     return commands_to_run
 
 
-def tabix_command_from_chromosome_regions(regions_df, out_directory, http=False):
+def tabix_command_from_chromosome_regions(regions_df, http=False):
     """
     Generate a tabix command to download the regions present in regions_df
     from the given chromosome in The 1000 Genomes servers via FTP or HTTP.
@@ -96,11 +97,11 @@ def tabix_command_from_chromosome_regions(regions_df, out_directory, http=False)
 
     # Create a temporary bed file with this chromosome's regions
     # It will be used in the tabix command
-    chrom_bedfile = join('/tmp', 'chr_{0}.bed'.format(chrom))
+    chrom_bedfile = temp_filepath('chr_{0}.bed'.format(chrom))
     regions_df.to_csv(chrom_bedfile, sep='\t', header=False, index=False)
 
     # Define the destination VCF filename for this chromosome
-    dest_file = join(out_directory, 'chr_{0}.vcf.gz'.format(chrom))
+    dest_file = temp_filepath('chr_{}.vcf.gz'.format(chrom))
 
     chrom_1kg_url = thousand_genomes_chromosome_url(chrom, http)
     # Generate the tabix command to download 1kG genotypes for these regions
@@ -115,7 +116,7 @@ def tabix_command_from_chromosome_regions(regions_df, out_directory, http=False)
             'chrom_index_file': chrom_index_file}
 
 
-def run_commands(commands_to_run, parallel_downloads):
+def run_parallel_commands(commands_to_run, threads):
     """
     Expects a list of dicts with the commands to run and the destination files:
 
@@ -132,15 +133,10 @@ def run_commands(commands_to_run, parallel_downloads):
     """
     def syscall(command):
         logger.info('Running command: %s' % command['cmd'])
-        exit_status = system(command['cmd'])
-        command_with_result = dict(command)
-        command_with_result.update({'exit_status': exit_status})
-        return command_with_result
+        check_call(command['cmd'], shell=True)
 
-    with ThreadPoolExecutor(max_workers=parallel_downloads) as pool:
-        results = pool.map(syscall, commands_to_run)
-
-    return list(results)
+    with ThreadPoolExecutor(max_workers=threads) as executor:
+        executor.map(syscall, commands_to_run)
 
 
 def merge_vcfs(vcfs, outfile, gzip=True):
@@ -154,14 +150,23 @@ def merge_vcfs(vcfs, outfile, gzip=True):
         command_to_run = command_to_run.replace('>', '| bgzip >')
 
     logger.info('Running: %s' % command_to_run)
-    system(command_to_run)
+    check_call(command_to_run, shell=True)
 
     return outfile
 
 
-def clean_tempfiles(tabix_commands):
-    """Remove .vcf.gz.tbi index files and single chromosome VCF files."""
-    for tabix_command in tabix_commands:
-        remove(tabix_command['dest_file'])
-        remove(tabix_command['chrom_bedfile'])
-        remove(tabix_command['chrom_index_file'])
+def cleanup_temp_files():
+    """Remove all temp BED, VCF and tbi files found."""
+    for fn in glob(join(TEMP_DIR, TEMP_PREFIX + '*')):
+        logger.debug('Cleanup: remove {}'.format(fn))
+        remove(fn)
+
+    # The .tbi files are downloaded to the directory where tabix is run,
+    # not to the destination directory of the VCF, so I have to remove them
+    # from there.
+    for fn in glob(THOUSAND_GENOMES_TBI_PATTERN):
+        remove(fn)
+
+def temp_filepath(filename):
+    return join(TEMP_DIR, '{}__{}'.format(TEMP_PREFIX, filename))
+

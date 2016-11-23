@@ -6,7 +6,7 @@ import pytest
 
 from bed_to_tabix.lib.pipeline import (read_bed,
                                        tabix_commands_from_bedfile_df,
-                                       run_commands,
+                                       run_parallel_commands,
                                        merge_vcfs)
 
 
@@ -42,8 +42,7 @@ def test_read_bed(unsorted_bedfile):
     assert len(df) == num_lines
 
 def test_tabix_commands_from_bedfile_df(bedfile_df):
-    commands_to_run = tabix_commands_from_bedfile_df(
-            bedfile_df, join(TEST_DIR, 'files'))
+    commands_to_run = tabix_commands_from_bedfile_df(bedfile_df)
 
     temp_bedfiles = [re.search(r'-R (.+\.bed) ', cmd['cmd']).group(1)
                      for cmd in commands_to_run]
@@ -55,19 +54,10 @@ def test_tabix_commands_from_bedfile_df(bedfile_df):
     finally:
         clean_temp_bedfiles(commands_to_run)
 
-def test_tabix_commands_(bedfile_df):
-    commands_to_run = tabix_commands_from_bedfile_df(bedfile_df,
-                                                     join('/tmp', 'testing'))
-
-    try:
-        assert all('/tmp/testing' in cmd['cmd'] for cmd in commands_to_run)
-    finally:
-        clean_temp_bedfiles(commands_to_run)
-
-def test_run_commands():
+def test_run_parallel_commands():
     commands_to_run = [{'cmd': 'pwd > /dev/null'}]
-    results = run_commands(commands_to_run, parallel_downloads=2)
-    assert all(result['exit_status'] == 0 for result in results)
+    run_parallel_commands(commands_to_run, threads=2)
+    # No assertions. If the commands fail, CalledProcessError will be raised.
 
 
 def test_merge_vcfs(vcfs):
