@@ -1,12 +1,12 @@
 # `bed_to_tabix`
 
 `bed_to_tabix` will download a gzipped VCF file with the 2,504 genotypes from 
-The 1,000 Genomes Project at the regions defined in one or more BED files.
-The utility will specifically handle for you the BED sorting, merging of many
-BEDs, **parallel-downloading** of the different chromosome variants with `tabix`
-(you can even use HTTP URLs in case your FTP traffic is blocked) and it will
+The 1,000 Genomes Project in the regions defined in one or more BED files.
+The utility will specifically handle: the BED sorting, the merging of many
+BEDs, the **parallel-downloading** of the different chromosome variants with `tabix`
+(you can even use HTTP URLs in case your FTP traffic is blocked), and it will
 merge the resulting VCFs in a single gzipped VCF. Afterwards, it will perform
-a cleanup of the temporary files, so you're done with a single results file.
+a cleanup of the temporary files, so you end up with a single results file.
 
 ![Screenshot](screen.png)
 
@@ -14,7 +14,7 @@ a cleanup of the temporary files, so you're done with a single results file.
 
 - A working Internet connection.
 - Python 3.5 or greater (you can get it at [Anaconda](https://www.continuum.io/downloads)).
-- `tabix`, `bgzip` and `bcftools` command line utilities (>= 1.3.2). You can download all of them from [htslib.org](http://www.htslib.org/download). Choose the `htslib` and `bcftools` packages to download. If you have an old `tabix` version, update it, since the command line interface changed from older versions.
+- `tabix`, `bgzip` and `bcftools` command line utilities (>= 1.3.2). You can download all of them from [htslib.org](http://www.htslib.org/download), choosing the `htslib` and `bcftools` packages. If you have an old `tabix` version, update it because the command line interface changed from older versions.
 
 After downloading the packages, you can install them with these commands
 (replace `htslib` with `bcftools` to install the latter):
@@ -43,7 +43,7 @@ bcftools -h
 
 ## How to Install `bed_to_tabix`
 
-You need `git` for this. In case you don't have it, `sudo apt-get install git` will work in Ubuntu.
+You need `git` for this. In case you don't have it, `sudo apt-get install git` will work on Ubuntu.
 
 ```bash
 git clone https://github.com/biocodices/bed_to_tabix
@@ -68,8 +68,7 @@ bed_to_tabix --in regions1.bed --threads 10 --unzipped --out 1kg
 bed_to_tabix --in regions1.bed --in regions2.bed
 ```
 
-You will get a [gzipped] VCF file with the variant genotypes from the 2,504
-samples in the 1kG Proyect, at the regions listed in your BED(s).
+You will get a [gzipped] VCF file with the 1kG variants found in your regions.
 
 In case you can't connect to port 21 (FTP) --I know this is usual in some
 University networks--, you can use the HTTP URLs from 1000 Genomes:
