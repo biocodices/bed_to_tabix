@@ -2,24 +2,27 @@ from os import remove
 from os.path import realpath, dirname, join, isfile, getsize
 import re
 
-import pytest
-
 from bed_to_tabix.lib.pipeline import (read_bed,
                                        tabix_commands_from_bedfile_df,
                                        run_parallel_commands,
                                        merge_vcfs)
+from bed_to_tabix.lib.helpers import thousand_genomes_chromosome_url
 
 
 TEST_DIR = dirname(realpath(__file__))
 
+
 def _test_filename(filename):
     return join(TEST_DIR, filename)
 
+
 UNSORTED_BEDFILE = _test_filename('files/unsorted.bed')
+
 
 def vcfs():
     return [_test_filename('files/chr_9.vcf.gz'),
             _test_filename('files/chr_10.vcf.gz')]
+
 
 def clean_temp_bedfiles(commands):
     temp_bedfiles = [re.search(r'-R (.+\.bed) ', cmd['cmd']).group(1)
@@ -28,6 +31,18 @@ def clean_temp_bedfiles(commands):
     for temp_bedfile in temp_bedfiles:
         remove(temp_bedfile)
 
+
+def test_thousand_genomes_chromosome_url():
+    result = thousand_genomes_chromosome_url('1')
+    assert result == 'ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr1.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz'
+
+    result = thousand_genomes_chromosome_url('X')
+    assert result == 'ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chrX.phase3_shapeit2_mvncall_integrated_v1b.20130502.genotypes.vcf.gz'
+
+    result = thousand_genomes_chromosome_url('Y')
+    assert result == 'ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chrY.phase3_integrated_v2a.20130502.genotypes.vcf.gz'
+
+
 def test_read_bed():
     df = read_bed(UNSORTED_BEDFILE)
     assert all(df.columns == ['chrom', 'start', 'stop', 'feature'])
@@ -35,6 +50,7 @@ def test_read_bed():
 
     num_lines = sum(1 for line in open(UNSORTED_BEDFILE))
     assert len(df) == num_lines
+
 
 def test_tabix_commands_from_bedfile_df():
     bedfile_df = read_bed(UNSORTED_BEDFILE)
@@ -50,10 +66,12 @@ def test_tabix_commands_from_bedfile_df():
     finally:
         clean_temp_bedfiles(commands_to_run)
 
+
 def test_run_parallel_commands():
     commands_to_run = [{'cmd': 'pwd > /dev/null'}]
     run_parallel_commands(commands_to_run, threads=2)
     # No assertions. If the commands fail, CalledProcessError will be raised.
+
 
 def test_merge_vcfs(tmpdir):
     outfile1 = str(tmpdir.join('test_out.vcf.gz'))
