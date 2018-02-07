@@ -4,6 +4,10 @@ All changes to the public API of this tool will be documented here.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.2]
+
+Bugfix: fixed the URL of chromosome Y.
+
 ## [1.1.1]
 
 Changed the location of tempfiles (always to `/tmp` now).
