@@ -1,6 +1,5 @@
 from os import remove, getpid
 from os.path import basename, join
-import concurrent.futures.thread
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from subprocess import check_output, CalledProcessError, STDOUT
 import time
@@ -54,7 +53,7 @@ def run_pipeline(bedfiles, threads, outfile, gzip=True,
 
     logger.info('Merge the downloaded .vcf.gz files')
     vcfs = [result['dest_file'] for result in tabix_commands]  # tabix_results
-    result_vcf = merge_vcfs(vcfs, outfile, gzip)
+    merge_vcfs(vcfs, outfile, gzip)
 
     elapsed_time = format_timespan(time.time() - t0)
     logger.info('Done! Took {}. Check {}'.format(elapsed_time, outfile))
@@ -73,6 +72,11 @@ def read_bed(bedfile):
     """Read a bedfile and return a pandas DataFrame with the features."""
     df = pd.read_table(bedfile, names=BED_COLUMNS)
     df['chrom'] = make_chromosome_series_categorical(df['chrom'])
+
+    logger.warn('Removing regions in chromosome "Y"!')
+    in_chrom_Y = df['chrom'] == 'Y'
+    df = df[~in_chrom_Y]
+
     return df.reset_index(drop=True)
 
 
@@ -84,6 +88,8 @@ def tabix_commands_from_bedfile_df(bedfile_df, http=False):
     """
     commands_to_run = []
     for chrom, regions_df in bedfile_df.groupby('chrom'):
+        if not len(regions_df):
+            continue
         command_to_run = tabix_command_from_chromosome_regions(regions_df,
                                                                http=http)
         commands_to_run.append(command_to_run)
