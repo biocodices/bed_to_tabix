@@ -4,8 +4,7 @@ Welcome to BED-TO-TABIX! This tool will download the variant genotypes from
 The 1,000 Genomes Proyect's at the regions defined in one or more BED files.
 
 Usage:
-    bed_to_tabix --in BEDFILE... [--out VCFFILE] [--threads N] [--unzipped]
-                                 [--dry-run] [--http] [-f] [--debug]
+    bed_to_tabix --in BEDFILE... [options]
     bed_to_tabix (--help | --version)
 
 Options:
@@ -31,6 +30,9 @@ Options:
 
     --debug           Run in DEBUG logging mode. It will print the comands
                       being run at each step.
+
+    --no-cleanup      Don't remove the temporary files after finishing.
+                      Useful for debugging.
 
     --http            Use HTTP 1000 Genomes URLs instead of FTP.
 
@@ -110,7 +112,8 @@ def main():
         logger.warning(msg.format(*error.args))
         sys.exit()
     finally:
-        cleanup_temp_files()
+        if '--no-cleanup' not in arguments:
+            cleanup_temp_files()
 
 
 if __name__ == '__main__':

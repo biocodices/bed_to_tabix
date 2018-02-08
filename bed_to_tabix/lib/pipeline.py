@@ -71,13 +71,15 @@ def read_beds(bedfiles):
 def read_bed(bedfile):
     """Read a bedfile and return a pandas DataFrame with the features."""
     df = pd.read_table(bedfile, names=BED_COLUMNS)
+
+    if 'Y' in df['chrom'].values or 'chrY' in df['chrom'].values:
+        in_chrom_Y = df['chrom'].isin(['Y', 'chrY'])
+        logger.warn('Removing {} regions in chromosome "Y"!'
+                    .format(len(df[in_chrom_Y])))
+        df = df[~in_chrom_Y].reset_index(drop=True)
+
     df['chrom'] = make_chromosome_series_categorical(df['chrom'])
-
-    logger.warn('Removing regions in chromosome "Y"!')
-    in_chrom_Y = df['chrom'] == 'Y'
-    df = df[~in_chrom_Y]
-
-    return df.reset_index(drop=True)
+    return df
 
 
 def tabix_commands_from_bedfile_df(bedfile_df, http=False):

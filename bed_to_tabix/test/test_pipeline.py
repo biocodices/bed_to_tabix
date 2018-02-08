@@ -59,6 +59,8 @@ def test_tabix_commands_from_bedfile_df():
     bedfile_df = read_bed(UNSORTED_BEDFILE)
     commands_to_run = tabix_commands_from_bedfile_df(bedfile_df)
 
+    assert len(commands_to_run) == 23  # All chromosomes in the test file
+
     temp_bedfiles = [re.search(r'-R (.+\.bed) ', cmd['cmd']).group(1)
                      for cmd in commands_to_run]
 
