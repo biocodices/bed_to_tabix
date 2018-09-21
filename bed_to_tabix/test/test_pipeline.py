@@ -17,6 +17,7 @@ def _test_filename(filename):
 
 
 UNSORTED_BEDFILE = _test_filename('files/unsorted.bed')
+PATH_TO_BCFTOOLS = _test_filename('files/bcftools')
 
 
 def vcfs():
@@ -80,10 +81,10 @@ def test_run_parallel_commands():
 
 def test_merge_vcfs(tmpdir):
     outfile1 = str(tmpdir.join('test_out.vcf.gz'))
-    merge_vcfs(vcfs(), outfile1)
+    merge_vcfs(vcfs(), outfile1, path_to_bcftools=PATH_TO_BCFTOOLS)
 
     outfile2 = str(tmpdir.join('test_out.vcf'))
-    merge_vcfs(vcfs(), outfile2, gzip=False)
+    merge_vcfs(vcfs(), outfile2, path_to_bcftools=PATH_TO_BCFTOOLS, gzip=False)
 
     assert isfile(outfile1)
     assert getsize(outfile1) > 0

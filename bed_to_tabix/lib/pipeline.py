@@ -24,7 +24,7 @@ BED_COLUMNS = 'chrom start stop feature'.split()
 logger = logging.getLogger(PACKAGE_INFO['PROGRAM_NAME'])
 
 
-def run_pipeline(bedfiles, threads, outfile, gzip=True,
+def run_pipeline(bedfiles, threads, outfile, path_to_bcftools, gzip=True,
                  dry_run=False, http=False):
     """Get the 1000 Genomes genotypes for the regions in the passed bedfile.
     Return the name of the resulting .vcf.gz file."""
@@ -53,7 +53,7 @@ def run_pipeline(bedfiles, threads, outfile, gzip=True,
 
     logger.info('Merge the downloaded .vcf.gz files')
     vcfs = [result['dest_file'] for result in tabix_commands]  # tabix_results
-    merge_vcfs(vcfs, outfile, gzip)
+    merge_vcfs(vcfs, outfile, path_to_bcftools, gzip)
 
     elapsed_time = format_timespan(time.time() - t0)
     logger.info('Done! Took {}. Check {}'.format(elapsed_time, outfile))
@@ -70,12 +70,12 @@ def read_beds(bedfiles):
 
 def read_bed(bedfile):
     """Read a bedfile and return a pandas DataFrame with the features."""
-    df = pd.read_table(bedfile, names=BED_COLUMNS)
+    df = pd.read_csv(bedfile, sep=r"\s+", names=BED_COLUMNS)
 
     if 'Y' in df['chrom'].values or 'chrY' in df['chrom'].values:
         in_chrom_Y = df['chrom'].isin(['Y', 'chrY'])
-        logger.warn('Removing {} regions in chromosome "Y"!'
-                    .format(len(df[in_chrom_Y])))
+        logger.warning('Removing {} regions in chromosome "Y"!'
+                       .format(len(df[in_chrom_Y])))
         df = df[~in_chrom_Y].reset_index(drop=True)
 
     df['chrom'] = make_chromosome_series_categorical(df['chrom'])
@@ -163,12 +163,14 @@ def run_parallel_commands(commands_to_run, threads):
             list(results)  # raises Exception from any of the threads
 
 
-def merge_vcfs(vcfs, outfile, gzip=True):
+def merge_vcfs(vcfs, outfile, path_to_bcftools, gzip=True):
     """
     Merge a list of VCF files by calling bcftools. Return the filename of the
     resulting VCF, gzipped by default.
     """
-    command_to_run = 'bcftools concat {} > {}'.format(' '.join(vcfs), outfile)
+    command_to_run = '{} concat {} > {}'.format(
+        path_to_bcftools, ' '.join(vcfs), outfile
+    )
 
     if gzip:
         command_to_run = command_to_run.replace('>', '| bgzip >')

@@ -4,7 +4,7 @@ Welcome to BED-TO-TABIX! This tool will download the variant genotypes from
 The 1,000 Genomes Proyect's at the regions defined in one or more BED files.
 
 Usage:
-    bed_to_tabix --in BEDFILE... [options]
+    bed_to_tabix --in BEDFILE... --path-to-bcftools PATH [options]
     bed_to_tabix (--help | --version)
 
 Options:
@@ -18,6 +18,8 @@ Options:
                       use the input filepath and replace .bed with .vcf.gz.
                       WARNING: if a file with the same filename exists, it
                       will be overwritten.
+
+    --path-to-bcftools PATH   Full path to bcftools executable.
 
     --threads N       Perform the downloads in N parallel threads. Default: 6.
 
