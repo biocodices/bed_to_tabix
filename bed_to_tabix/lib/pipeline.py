@@ -158,6 +158,7 @@ def run_parallel_commands(commands_to_run, threads):
         # I have to group the commands in groups of size=threads before using
         # ThreadPoolExecutor because otherwise the extra commands can't be
         # easily stopped with CTRL-C or whenever an Exception is raised.
+        group_of_commands = [cmd for cmd in group_of_commands if cmd]
         with ThreadPoolExecutor(len(group_of_commands)) as executor:
             results = executor.map(syscall, group_of_commands)
             list(results)  # raises Exception from any of the threads

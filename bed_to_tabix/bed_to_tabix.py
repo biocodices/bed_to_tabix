@@ -101,11 +101,12 @@ def main():
 
     try:
         run_pipeline(bedfiles=arguments['--in'],
-                    threads=arguments['--threads'],
-                    outfile=arguments['--out'],
-                    gzip=(not arguments['--unzipped']),
-                    dry_run=arguments['--dry-run'],
-                    http=arguments['--http'])
+                     threads=arguments['--threads'],
+                     outfile=arguments['--out'],
+                     gzip=(not arguments['--unzipped']),
+                     dry_run=arguments['--dry-run'],
+                     path_to_bcftools=arguments['--path-to-bcftools'],
+                     http=arguments['--http'])
     except KeyboardInterrupt:
         logger.warning('User stopped the program. Cleanup and exit.')
         sys.exit()
