@@ -1,0 +1,3 @@
+[console_scripts]
+bed_to_tabix = bed_to_tabix.bed_to_tabix:main
+

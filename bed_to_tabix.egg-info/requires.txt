@@ -1,0 +1,4 @@
+pandas
+docopt
+coloredlogs
+humanfriendly
