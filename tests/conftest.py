@@ -22,3 +22,10 @@ def path_to_bgzip():
     if varname not in environ:
         raise Exception(f'Please run pytest with ENV variable {varname}')
     return environ.get(varname)
+
+@pytest.fixture
+def path_to_tabix():
+    varname = 'PATH_TO_TABIX'
+    if varname not in environ:
+        raise Exception(f'Please run pytest with ENV variable {varname}')
+    return environ.get(varname)

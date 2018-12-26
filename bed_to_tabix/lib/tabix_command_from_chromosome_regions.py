@@ -4,10 +4,14 @@ from .temp_filepath import temp_filepath
 from .thousand_genomes_chromosome_url import thousand_genomes_chromosome_url
 
 
-def tabix_command_from_chromosome_regions(regions_df, http=False):
+def tabix_command_from_chromosome_regions(regions_df,
+                                          path_to_tabix,
+                                          path_to_bgzip,
+                                          http=False):
     """
     Generate a tabix command to download the regions present in regions_df
-    from the given chromosome in The 1000 Genomes servers via FTP or HTTP.
+    from The 1000 Genomes Project servers via FTP or HTTP. Requires that all
+    regions are located in the same chromosome.
 
     Returns a tuple: (tabix_command, destination_filepath)
     """
@@ -17,7 +21,7 @@ def tabix_command_from_chromosome_regions(regions_df, http=False):
     chrom = seen_chromosomes.pop()
 
     # Create a temporary bed file with this chromosome's regions
-    # It will be used in the tabix command
+    # It will be used in the tabix command, as the -R parameter
     chrom_bedfile = temp_filepath('chr_{}.bed'.format(chrom))
     regions_df.to_csv(chrom_bedfile, sep='\t', header=False, index=False)
 
@@ -26,8 +30,10 @@ def tabix_command_from_chromosome_regions(regions_df, http=False):
 
     chrom_1kg_url = thousand_genomes_chromosome_url(chrom, http)
     # Generate the tabix command to download 1kG genotypes for these regions
-    tabix_command = ('tabix -fh -R {0} {1} | bgzip > {2}'
-                     .format(chrom_bedfile, chrom_1kg_url, dest_file))
+    tabix_command = (
+        f'{path_to_tabix} -fh -R {chrom_bedfile} {chrom_1kg_url} | ' +
+        f'{path_to_bgzip} > {dest_file}'
+    )
 
     chrom_index_file = basename(chrom_1kg_url) + '.tbi'
 
