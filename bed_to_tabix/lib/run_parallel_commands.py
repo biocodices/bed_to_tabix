@@ -1,9 +1,8 @@
-from subprocess import check_output, STDOUT
 from concurrent.futures import ThreadPoolExecutor
 
 from more_itertools import chunked
 
-from .logger import logger
+from bed_to_tabix.lib import run_shell_command
 
 
 def run_parallel_commands(commands_to_run, threads):
@@ -18,12 +17,6 @@ def run_parallel_commands(commands_to_run, threads):
         [{'cmd': command_1, 'success': True}, ... ]
 
     """
-    def syscall(command):
-        ix = id(command['cmd'])
-        logger.debug('Running command {}: {}'.format(ix, command['cmd']))
-        output = check_output(command['cmd'], shell=True, stderr=STDOUT)
-        logger.debug('Output {}: {}'.format(ix, output.decode('utf-8')))
-
     threads = min(threads, len(commands_to_run))
     for group_of_commands in chunked(commands_to_run, n=threads):
         # I have to group the commands in groups of size=threads before using
@@ -31,5 +24,5 @@ def run_parallel_commands(commands_to_run, threads):
         # easily stopped with CTRL-C or whenever an Exception is raised.
         group_of_commands = [cmd for cmd in group_of_commands if cmd]
         with ThreadPoolExecutor(len(group_of_commands)) as executor:
-            results = executor.map(syscall, group_of_commands)
+            results = executor.map(run_shell_command, group_of_commands)
             list(results)  # raises Exception from any of the threads

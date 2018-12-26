@@ -1,6 +1,4 @@
-from subprocess import check_output, STDOUT, CalledProcessError
-
-from bed_to_tabix.lib import logger
+from bed_to_tabix.lib import run_shell_command
 
 
 def merge_vcfs(vcfs, outfile, path_to_bcftools, path_to_bgzip, gzip=True):
@@ -14,12 +12,5 @@ def merge_vcfs(vcfs, outfile, path_to_bcftools, path_to_bgzip, gzip=True):
     if gzip:
         command = command.replace('>', f'| {path_to_bgzip} >')
 
-    logger.info(f'Running: {command}')
-    try:
-        check_output(command, shell=True, stderr=STDOUT)
-    except CalledProcessError as e:
-        error = e.stdout.decode('utf-8')
-        message = f'Command:\n\n{command}\n\nFailed with message:\n\n{error}'
-        raise CalledProcessError(message)
-
+    run_shell_command(command)
     return outfile
