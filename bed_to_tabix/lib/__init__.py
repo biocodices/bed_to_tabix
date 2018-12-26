@@ -1,8 +1,8 @@
 from .bed_stats import bed_stats
+from .make_chromosome_series_categorical import \
+    make_chromosome_series_categorical
 #  from .thousand_genomes_chromosome_url import thousand_genomes_chromosome_url
 #  from .bed_stats import bed_stats
-#  from .make_chromosome_series_categorical import \
-    #  make_chromosome_series_categorical
 #  from .merge_beds import merge_beds
 #  from .run_parallel_commands import run_parallel_commands
 #  from .run_pipeline import run_pipeline
