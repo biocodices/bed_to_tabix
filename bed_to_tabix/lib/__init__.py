@@ -13,4 +13,4 @@ from .temp_filepath import temp_filepath
 from .tabix_command_from_chromosome_regions \
     import tabix_command_from_chromosome_regions
 from .tabix_commands_from_bedfile_df import tabix_commands_from_bedfile_df
-#  from .run_pipeline import run_pipeline
+from .run_pipeline import run_pipeline
