@@ -1,0 +1,4 @@
+chr12	100	200	duplicated_region
+chr13	100	200	foo2
+chr13	300	400	bar2
+chr13	500	600	baz2
