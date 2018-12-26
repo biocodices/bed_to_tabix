@@ -11,7 +11,6 @@ from bed_to_tabix.lib.pipeline import (read_bed,
 
 
 UNSORTED_BEDFILE = pytest.helpers.file('unsorted.bed')
-PATH_TO_BCFTOOLS = pytest.helpers.file('bcftools')
 
 
 
