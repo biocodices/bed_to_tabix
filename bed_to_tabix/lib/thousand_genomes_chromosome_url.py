@@ -1,15 +1,14 @@
-from .constants import THOUSAND_GENOMES_FTP, THOUSAND_GENOMES_HTTP
-
-
 def thousand_genomes_chromosome_url(chromosome, http=False):
     """Generate the chromosome url from 1000 Genomes. Used for tabix."""
     if chromosome == 'X':
-        fn = 'ALL.chrX.phase3_shapeit2_mvncall_integrated_v1b.20130502.genotypes.vcf.gz'
+        variable_part = 'phase3_shapeit2_mvncall_integrated_v1b'
     elif chromosome == 'Y':
-        fn = 'ALL.chrY.phase3_integrated_v2a.20130502.genotypes.vcf.gz'
+        variable_part = 'phase3_integrated_v2a'
     else:
-        fn = 'ALL.chr{0}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz'
-        fn = fn.format(chromosome)
+        variable_part = 'phase3_shapeit2_mvncall_integrated_v5a'
 
-    base_url = THOUSAND_GENOMES_HTTP if http else THOUSAND_GENOMES_FTP
-    return base_url + fn
+    protocol = 'http' if http else 'ftp'
+    domain = 'ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502'
+    fn = f'ALL.chr{chromosome}.{variable_part}.20130502.genotypes.vcf.gz'
+
+    return f'{protocol}://{domain}/{fn}'

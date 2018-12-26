@@ -7,8 +7,7 @@ from .logger import logger
 from .merge_beds import merge_beds
 from .run_shell_command import run_shell_command
 from .merge_vcfs import merge_vcfs
-#  from .thousand_genomes_chromosome_url import thousand_genomes_chromosome_url
-#  from .bed_stats import bed_stats
+from .thousand_genomes_chromosome_url import thousand_genomes_chromosome_url
 from .run_parallel_commands import run_parallel_commands
 #  from .run_pipeline import run_pipeline
 #  from .test_tabix_commands_from_bedfile_df import tabix_commands_from_bedfile_df
