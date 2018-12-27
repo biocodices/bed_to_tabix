@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from more_itertools import chunked
 
-from bed_to_tabix.lib import run_shell_command
+from lib import run_shell_command
 
 
 def run_parallel_commands(commands_to_run, threads):

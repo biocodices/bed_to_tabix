@@ -1,6 +1,6 @@
 from os import getpid
 
-from bed_to_tabix.package_info import PACKAGE_INFO
+from package_info import PACKAGE_INFO
 
 
 BED_COLUMNS = 'chrom start stop name'.split()

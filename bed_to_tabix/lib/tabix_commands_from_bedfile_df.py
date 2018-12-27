@@ -1,5 +1,4 @@
-from .tabix_command_from_chromosome_regions import \
-    tabix_command_from_chromosome_regions
+from lib import tabix_command_from_chromosome_regions
 
 
 def tabix_commands_from_bedfile_df(bedfile_df,

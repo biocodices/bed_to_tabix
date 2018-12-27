@@ -1,6 +1,6 @@
 import subprocess
 
-from bed_to_tabix.lib import logger
+from lib import logger
 
 
 def run_shell_command(command, ix=None):
@@ -8,7 +8,7 @@ def run_shell_command(command, ix=None):
     if not ix:
         ix = id(command)
 
-    logger.info(f'[{ix}] Running: {command}')
+    logger.debug(f'[{ix}] Running: {command}')
 
     try:
         out = subprocess.check_output(command, shell=True,

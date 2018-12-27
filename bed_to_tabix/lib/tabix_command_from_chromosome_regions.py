@@ -1,7 +1,7 @@
 from os.path import basename
 
-from .temp_filepath import temp_filepath
-from .thousand_genomes_chromosome_url import thousand_genomes_chromosome_url
+from lib import temp_filepath
+from lib import thousand_genomes_chromosome_url
 
 
 def tabix_command_from_chromosome_regions(regions_df,

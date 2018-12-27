@@ -3,7 +3,7 @@ import inspect
 
 from humanfriendly import format_timespan
 
-from bed_to_tabix.lib import (
+from lib import (
     logger,
     merge_beds,
     bed_stats,
@@ -75,7 +75,10 @@ def run_pipeline(bedfiles,
     run_parallel_commands([c['cmd'] for c in tabix_commands],
                           threads=threads)
 
-    logger.info('Merge the downloaded .vcf.gz files')
+    logger.info('Merge the downloaded temporary .vcf.gz files:')
+    for command in tabix_commands:
+        logger.info(f' * {command["dest_file"]}')
+
     gzipped_vcfs = [result['dest_file'] for result in tabix_commands]
     merge_vcfs(
         gzipped_vcfs,

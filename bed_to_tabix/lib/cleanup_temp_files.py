@@ -3,8 +3,8 @@ from os.path import join
 from glob import glob
 from tempfile import gettempdir
 
-from bed_to_tabix.lib.constants import TEMP_PREFIX, THOUSAND_GENOMES_TBI_PATTERN
-from bed_to_tabix.lib.logger import logger
+from lib.constants import TEMP_PREFIX, THOUSAND_GENOMES_TBI_PATTERN
+from lib.logger import logger
 
 
 def cleanup_temp_files():

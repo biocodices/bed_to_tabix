@@ -72,8 +72,8 @@ from subprocess import CalledProcessError
 from docopt import docopt
 import coloredlogs
 
-from bed_to_tabix.package_info import PACKAGE_INFO
-from bed_to_tabix.lib import run_pipeline, cleanup_temp_files
+from lib import run_pipeline, cleanup_temp_files
+from package_info import PACKAGE_INFO
 
 
 logger = logging.getLogger(PACKAGE_INFO['PROGRAM_NAME'])
@@ -158,7 +158,10 @@ def main():
         logger.warning(msg.format(*error.args))
         sys.exit()
     finally:
-        if '--no-cleanup' not in arguments:
+        if arguments['--no-cleanup']:
+            logger.info('No cleanup requested, leaving the temp files.')
+        else:
+            logger.info('Cleaning up temporary files.')
             cleanup_temp_files()
 
 

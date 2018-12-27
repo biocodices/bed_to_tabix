@@ -9,6 +9,7 @@ pytest = "*"
 [packages]
 pandas = "*"
 e1839a8 = {editable = true,path = "."}
+more-itertools = "*"
 
 [requires]
 python_version = "3.6"

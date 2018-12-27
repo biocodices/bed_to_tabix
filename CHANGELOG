@@ -4,6 +4,12 @@ All changes to the public API of this tool will be documented here.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0]
+
+Major refactor. Fixed chromosome Y issues when merging VCFs. Now running
+requires paths to working copies of TABIX, BGZIP, JAVA, GATK3, BCFTOOLS,
+and a human reference FASTA file for GATK3.
+
 ## [1.1.2]
 
 Removing chromosome Y regions until bugfix.
@@ -21,4 +27,3 @@ Changed the default `--threads` argument to 6.
 ## [1.0.0]
 
 Initial release.
-
