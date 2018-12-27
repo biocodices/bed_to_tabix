@@ -1,7 +1,7 @@
 from os.path import join
 from tempfile import gettempdir
 
-from lib import TEMP_PREFIX
+from ..lib import TEMP_PREFIX
 
 
 def temp_filepath(filename):

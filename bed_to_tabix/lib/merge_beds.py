@@ -1,8 +1,8 @@
 import pandas as pd
 
-from lib import BED_COLUMNS
-from lib import read_bed
-from lib import logger
+from ..lib import BED_COLUMNS
+from ..lib import read_bed
+from ..lib import logger
 
 
 def merge_beds(bedfiles):

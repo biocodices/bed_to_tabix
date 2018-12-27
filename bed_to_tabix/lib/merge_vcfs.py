@@ -1,6 +1,6 @@
 from os.path import basename
 
-from lib import run_shell_command
+from ..lib import run_shell_command
 
 
 def merge_vcfs(gzipped_vcfs, outfile, path_to_reference_fasta, path_to_bgzip,

@@ -72,8 +72,8 @@ from subprocess import CalledProcessError
 from docopt import docopt
 import coloredlogs
 
-from lib import run_pipeline, cleanup_temp_files
-from package_info import PACKAGE_INFO
+from .lib import run_pipeline, cleanup_temp_files
+from .package_info import PACKAGE_INFO
 
 
 logger = logging.getLogger(PACKAGE_INFO['PROGRAM_NAME'])

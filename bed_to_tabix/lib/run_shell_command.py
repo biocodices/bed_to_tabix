@@ -1,6 +1,6 @@
 import subprocess
 
-from lib import logger
+from ..lib import logger
 
 
 def run_shell_command(command, ix=None):

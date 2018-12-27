@@ -1,7 +1,7 @@
 import pandas as pd
 
-from lib import BED_COLUMNS
-from lib import make_chromosome_series_categorical
+from ..lib import BED_COLUMNS
+from ..lib import make_chromosome_series_categorical
 
 
 def read_bed(bedfile):

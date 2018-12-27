@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from more_itertools import chunked
 
-from lib import run_shell_command
+from ..lib import run_shell_command
 
 
 def run_parallel_commands(commands_to_run, threads):

@@ -4,7 +4,7 @@ import inspect
 from humanfriendly import format_timespan
 from more_itertools import one
 
-from lib import (
+from ..lib import (
     logger,
     merge_beds,
     bed_stats,
