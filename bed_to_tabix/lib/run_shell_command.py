@@ -15,10 +15,12 @@ def run_shell_command(command, ix=None):
                                       stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         error = e.stdout.decode('utf-8')
-        message = (f'Command:\n\n[{ix}] {command}\n\nFailed with message:' +
-                   f'\n\n{error}')
+        message = ('Command:\n\n' +
+                   f'\t[{ix}] {command}\n\n' +
+                   'Failed with message:\n\n' +
+                   f'\t"{error.strip()}"')
         logger.error(message)
-        raise subprocess.CalledProcessError(message)
+        raise
 
     out = out.decode('utf-8')
     logger.debug(f'[{ix}] Output: {out}')

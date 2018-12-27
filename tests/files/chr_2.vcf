@@ -1,7 +1,8 @@
 ##fileformat=VCFv4.1
-##contig=<ID=chr2,assembly=b37,length=249250621>
+##contig=<ID=2,assembly=b37,length=249250621>
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=FOO,Number=1,Type=String>
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE-1
-chr2	100	rs20	A	T	100.1	PASS	FOO=foo	GT	1/1	
-chr2	200	rs21	G	GT	100.1	PASS	FOO=foo	GT	0/1	
-chr2	300	rs22	GC	G	100.1	PASS	FOO=foo	GT	0/0	
+2	100	rs20	A	T	100.1	PASS	FOO=foo	GT	1/1	
+2	200	rs21	G	GT	100.1	PASS	FOO=foo	GT	0/1	
+2	300	rs22	GC	G	100.1	PASS	FOO=foo	GT	0/0	

@@ -1,4 +1,5 @@
 import time
+import inspect
 
 from humanfriendly import format_timespan
 
@@ -18,9 +19,12 @@ def run_pipeline(bedfiles,
                  path_to_bcftools,
                  path_to_tabix,
                  path_to_bgzip,
+                 path_to_java,
+                 path_to_gatk3,
+                 path_to_reference_fasta,
                  gzip_output=True,
                  dry_run=False,
-                 http=False):
+                 http=True):
     """
     Take a list of BED files and produce a single VCF file with the genotypes
     of 1KG samples at those coordinates.
@@ -31,13 +35,21 @@ def run_pipeline(bedfiles,
     - threads: how many parallel downloads from 1KG servers to run.
     - outfile: path to the VCF that will be produced.
     - path_to...: path to executables of {bcftools,tabix,bgzip}.
+    - path_to_reference_fasta: path to the reference .fasta that will be used
+      internally by GATK3 CombineVariants to merge 1KG VCFs.
     - gzip_output: should the output be gzipped?
     - dry_run: set to True to only print and return the tabix commands that
       would be run.
-    - http: use HTTP URLs instead of FTP from 1KG.
+    - http: use HTTP URLs, set to false to use FTP URLs from 1KG.
     """
     t0 = time.time()
-    logger.info('Read:\n\n' + '\n'.join(bedfiles) + '\n\n')
+
+    frame = inspect.currentframe()
+    args, _, _, values = inspect.getargvalues(frame)
+    logger.info('Received the following inputs:')
+    for arg in args:
+        logger.info(f' * {arg} = {values[arg]}')
+
     regions = merge_beds(bedfiles)
 
     msg = ('Found {n_regions} regions in {n_chromosomes} chromosomes, '
@@ -54,25 +66,26 @@ def run_pipeline(bedfiles,
 
     if dry_run:
         logger.info('Dry run! I would run these tabix commands:')
-        logger.info(*[command['cmd'] for command in tabix_commands], sep='\n')
+        for command in tabix_commands:
+            logger.info(f'* {command["cmd"]}')
         return tabix_commands
 
     logger.info('Execute tabix in batches of {} to download the '
                 '1kG genotypes (this might take a while!)'.format(threads))
     run_parallel_commands([c['cmd'] for c in tabix_commands],
                           threads=threads)
-    # ^ If any tabix call fails, a CalledProcessError will be raised and
-    # execution will stop.
-    # TODO: Condiser handling CalledProcessError?
 
     logger.info('Merge the downloaded .vcf.gz files')
-    vcfs = [result['dest_file'] for result in tabix_commands]  # tabix_results
+    gzipped_vcfs = [result['dest_file'] for result in tabix_commands]
     merge_vcfs(
-        vcfs,
+        gzipped_vcfs,
         outfile,
-        path_to_bcftools=path_to_bcftools,
+        path_to_java=path_to_java,
+        path_to_gatk3=path_to_gatk3,
+        path_to_tabix=path_to_tabix,
         path_to_bgzip=path_to_bgzip,
-        gzip=gzip_output,
+        path_to_reference_fasta=path_to_reference_fasta,
+        gzip_output=gzip_output,
     )
 
     elapsed_time = format_timespan(time.time() - t0)

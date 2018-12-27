@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 """
-Welcome to BED-TO-TABIX! This tool will download the variant genotypes from
-The 1,000 Genomes Proyect's at the regions defined in one or more BED files.
+Welcome to bed_to_tabix! This tool will download the genotypes from
+The 1,000 Genomes Proyect's in the regions defined in one or more BED files.
 
 Usage:
-    bed_to_tabix --in BEDFILE... --path-to-bcftools PATH [options]
+    bed_to_tabix --in BEDFILE... [options]
     bed_to_tabix (--help | --version)
 
 Options:
@@ -17,10 +17,7 @@ Options:
                       '.vcf' to the name. If not set, bed_to_tabix will
                       use the input filepath and replace .bed with .vcf.gz.
                       WARNING: if a file with the same filename exists, it
-                      will be overwritten.
-
-    --path-to-bcftools PATH   Full path to bcftools executable.
-
+                      will be overwritten without asking.
     --threads N       Perform the downloads in N parallel threads. Default: 6.
 
     --unzipped        If set, the downloaded VCF will not be gzipped.
@@ -36,14 +33,38 @@ Options:
     --no-cleanup      Don't remove the temporary files after finishing.
                       Useful for debugging.
 
-    --http            Use HTTP 1000 Genomes URLs instead of FTP.
+    --path-to-bcftools PATH    Full path to bcftools executable.
+                               If not present, the ENV variable
+                               PATH_TO_BCFTOOLS will be searched for.
+
+    --path-to-tabix PATH       Full path to tabix executable.
+                               If not present, the ENV variable
+                               PATH_TO_TABIX will be searched for.
+
+    --path-to-bgzip PATH       Full path to bgzip executable.
+                               If not present, the ENV variable
+                               PATH_TO_BGZIP will be searched for.
+
+    --path-to-java PATH        Full path to java executable.
+                               If not present, the ENV variable
+                               PATH_TO_JAVA will be searched for.
+
+    --path-to-gatk3 PATH       Full path to gatk3 java file.
+                               If not present, the ENV variable
+                               PATH_TO_GATK3 will be searched for.
+
+    --path-to-reference-fasta PATH       Full path to the reference fasta for
+                                         GATK to use.
+                                         If not present, the ENV variable
+                                         PATH_TO_REFERENCE_FASTA will be
+                                         searched for.
 
     -h --help         Show this help.
     -v --version      Show version.
 """
 
 import sys
-from os import getcwd
+from os import getcwd, environ
 from os.path import basename, join, isfile
 import logging
 from subprocess import CalledProcessError
@@ -52,14 +73,14 @@ from docopt import docopt
 import coloredlogs
 
 from bed_to_tabix.package_info import PACKAGE_INFO
-from bed_to_tabix.lib.pipeline import run_pipeline, cleanup_temp_files
+from bed_to_tabix.lib import run_pipeline, cleanup_temp_files
 
 
 logger = logging.getLogger(PACKAGE_INFO['PROGRAM_NAME'])
 
 defaults = {
-        '--threads': 6,
-    }
+    '--threads': 6,
+}
 
 def parse_arguments(arguments):
     if arguments['--version']:
@@ -83,6 +104,20 @@ def parse_arguments(arguments):
     if not arguments['--unzipped']:
         arguments['--out'] += '.gz'
 
+    varnames = ['bcftools', 'tabix', 'bgzip', 'gatk3', 'java',
+                'reference_fasta']
+    for varname in varnames:
+        varname = f'path_to_{varname}'
+        parameter = '--' + varname.replace('_', '-')
+        env_varname = varname.upper()
+        if not arguments[parameter]:
+            if env_varname in environ:
+                arguments[parameter] = environ[env_varname]
+            else:
+                print(f'Missing either {parameter} ' +
+                      f'or ENV variable {env_varname}')
+                sys.exit()
+
     if '--force' not in arguments and isfile(arguments['--out']):
         msg = ('Output file {} already exists!\nUse --force or -f to overwrite '
                'it or change the output filename with --out.')
@@ -100,13 +135,21 @@ def main():
     coloredlogs.install(level=loglevel)
 
     try:
-        run_pipeline(bedfiles=arguments['--in'],
-                     threads=arguments['--threads'],
-                     outfile=arguments['--out'],
-                     gzip=(not arguments['--unzipped']),
-                     dry_run=arguments['--dry-run'],
-                     path_to_bcftools=arguments['--path-to-bcftools'],
-                     http=arguments['--http'])
+        run_pipeline(
+            bedfiles=arguments['--in'],
+            threads=arguments['--threads'],
+            outfile=arguments['--out'],
+            gzip_output=(not arguments['--unzipped']),
+            dry_run=arguments['--dry-run'],
+            path_to_bcftools=arguments['--path-to-bcftools'],
+            path_to_java=arguments['--path-to-java'],
+            path_to_tabix=arguments['--path-to-tabix'],
+            path_to_gatk3=arguments['--path-to-gatk3'],
+            path_to_bgzip=arguments['--path-to-bgzip'],
+            path_to_reference_fasta=arguments['--path-to-reference-fasta'],
+            # The FTP option is failing and is not fixed yet:
+            # http=arguments['--http'],
+        )
     except KeyboardInterrupt:
         logger.warning('User stopped the program. Cleanup and exit.')
         sys.exit()

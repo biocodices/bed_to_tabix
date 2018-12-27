@@ -9,23 +9,32 @@ import pytest
 def file(filename):
     return join(dirname(realpath(__file__)), 'files', filename)
 
-@pytest.fixture
-def path_to_bcftools():
-    varname = 'PATH_TO_BCFTOOLS'
+def path_to_exec(name):
+    varname = f'PATH_TO_{name}'
     if varname not in environ:
         raise Exception(f'Please run pytest with ENV variable {varname}')
     return environ.get(varname)
+
+@pytest.fixture
+def path_to_bcftools():
+    return path_to_exec('BCFTOOLS')
 
 @pytest.fixture
 def path_to_bgzip():
-    varname = 'PATH_TO_BGZIP'
-    if varname not in environ:
-        raise Exception(f'Please run pytest with ENV variable {varname}')
-    return environ.get(varname)
+    return path_to_exec('BGZIP')
 
 @pytest.fixture
 def path_to_tabix():
-    varname = 'PATH_TO_TABIX'
-    if varname not in environ:
-        raise Exception(f'Please run pytest with ENV variable {varname}')
-    return environ.get(varname)
+    return path_to_exec('TABIX')
+
+@pytest.fixture
+def path_to_gatk3():
+    return path_to_exec('GATK3')
+
+@pytest.fixture
+def path_to_java():
+    return path_to_exec('JAVA')
+
+@pytest.fixture
+def path_to_reference_fasta():
+    return path_to_exec('REFERENCE_FASTA')
