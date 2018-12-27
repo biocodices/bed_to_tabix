@@ -56,13 +56,15 @@ def run_pipeline(bedfiles,
         logger.info(f' * {arg} = {values[arg]}')
 
     regions = merge_beds(bedfiles)
+
+    logger.info('Expand zero-length regions.')
     regions = fix_zero_length_regions(regions)
 
     msg = ('Found {n_regions} regions in {n_chromosomes} chromosomes, '
-           'spanning {total_bases} bases')
+           'spanning {total_bases} bases.')
     logger.info(msg.format(**bed_stats(regions)))
 
-    logger.info('Generate the tabix commands for the given regions')
+    logger.info('Generate the tabix commands for the given regions.')
     tabix_commands = tabix_commands_from_bedfile_df(
         regions,
         path_to_tabix=path_to_tabix,
