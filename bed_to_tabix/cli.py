@@ -134,6 +134,7 @@ def main():
     loglevel = 'DEBUG' if arguments['--debug'] else 'INFO'
     coloredlogs.install(level=loglevel)
 
+    failed_exit = False
     try:
         run_pipeline(
             bedfiles=arguments['--in'],
@@ -147,22 +148,29 @@ def main():
             path_to_gatk3=arguments['--path-to-gatk3'],
             path_to_bgzip=arguments['--path-to-bgzip'],
             path_to_reference_fasta=arguments['--path-to-reference-fasta'],
+            do_cleanup=(not arguments['--no-cleanup'])
             # The FTP option is failing and is not fixed yet:
             # http=arguments['--http'],
         )
     except KeyboardInterrupt:
         logger.warning('User stopped the program. Cleanup and exit.')
+        failed_exit = True
         sys.exit()
     except CalledProcessError as error:
         msg = 'The following command failed (code: {0}). Cleanup and exit: {1}'
         logger.warning(msg.format(*error.args))
+        failed_exit = True
         sys.exit()
     finally:
-        if arguments['--no-cleanup']:
-            logger.info('No cleanup requested, leaving the temp files.')
-        else:
-            logger.info('Cleaning up temporary files.')
-            cleanup_temp_files()
+        if failed_exit:
+            do_cleanup()
+
+def do_cleanup(arguments):
+    if arguments['--no-cleanup']:
+        logger.info('No cleanup requested, leaving the temp files.')
+    else:
+        logger.info('Cleaning up temporary files.')
+        cleanup_temp_files()
 
 
 if __name__ == '__main__':

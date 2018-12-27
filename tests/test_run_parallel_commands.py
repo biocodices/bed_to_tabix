@@ -8,10 +8,8 @@ def test_run_parallel_commands(monkeypatch):
     check_output_mock = Mock()
     monkeypatch.setattr(subprocess, 'check_output', check_output_mock)
 
-    run_parallel_commands(
-        commands_to_run=['cmd1', 'cmd2'],
-        threads=2
-    )
+    result = run_parallel_commands(commands_to_run=['cmd1', 'cmd2'], threads=2)
+    result = list(result)
 
     assert check_output_mock.call_count == 2
     call1, call2 = check_output_mock.call_args_list

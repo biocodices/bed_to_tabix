@@ -2,6 +2,7 @@ import time
 import inspect
 
 from humanfriendly import format_timespan
+from more_itertools import one
 
 from lib import (
     logger,
@@ -10,6 +11,7 @@ from lib import (
     tabix_commands_from_bedfile_df,
     run_parallel_commands,
     merge_vcfs,
+    cleanup_temp_files,
 )
 
 
@@ -24,6 +26,7 @@ def run_pipeline(bedfiles,
                  path_to_reference_fasta,
                  gzip_output=True,
                  dry_run=False,
+                 do_cleanup=True,
                  http=True):
     """
     Take a list of BED files and produce a single VCF file with the genotypes
@@ -41,6 +44,7 @@ def run_pipeline(bedfiles,
     - dry_run: set to True to only print and return the tabix commands that
       would be run.
     - http: use HTTP URLs, set to false to use FTP URLs from 1KG.
+    - do_cleanup: whether to remove the temporary chromosome files or not.
     """
     t0 = time.time()
 
@@ -72,12 +76,16 @@ def run_pipeline(bedfiles,
 
     logger.info('Execute tabix in batches of {} to download the '
                 '1kG genotypes (this might take a while!)'.format(threads))
-    run_parallel_commands([c['cmd'] for c in tabix_commands],
-                          threads=threads)
+    completed_commands = run_parallel_commands(
+        [c['cmd'] for c in tabix_commands],
+        threads=threads
+    )
+    for completed_command in completed_commands:
+        dest_file = one(cmd for cmd in tabix_commands
+                        if cmd['cmd'] == completed_command)['dest_file']
+        logger.info(f' * Downloaded: {dest_file}')
 
-    logger.info('Merge the downloaded temporary .vcf.gz files:')
-    for command in tabix_commands:
-        logger.info(f' * {command["dest_file"]}')
+    logger.info('Merge the downloaded temporary .vcf.gz files.')
 
     gzipped_vcfs = [result['dest_file'] for result in tabix_commands]
     merge_vcfs(
@@ -90,6 +98,9 @@ def run_pipeline(bedfiles,
         path_to_reference_fasta=path_to_reference_fasta,
         gzip_output=gzip_output,
     )
+
+    if do_cleanup:
+        cleanup_temp_files()
 
     elapsed_time = format_timespan(time.time() - t0)
     logger.info('Done! Took {}. Check {}'.format(elapsed_time, outfile))

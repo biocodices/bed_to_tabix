@@ -1,4 +1,4 @@
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from more_itertools import chunked
 
@@ -7,15 +7,11 @@ from lib import run_shell_command
 
 def run_parallel_commands(commands_to_run, threads):
     """
-    Expects a list of dicts with the commands to run:
+    Expects a list commands to run:
 
-        [{'cmd': command_1}, {'cmd': command_2}, ... ]
+        ['command1 --foo FOO --bar BAR', 'command2 --baz BAZ', ...]
 
-    Will run the commands in N threads and return a new list with the same
-    entries and a 'success' key:
-
-        [{'cmd': command_1, 'success': True}, ... ]
-
+    Yields the same commands as they are completed. (It's a generator.)
     """
     threads = min(threads, len(commands_to_run))
     for group_of_commands in chunked(commands_to_run, n=threads):
@@ -23,6 +19,12 @@ def run_parallel_commands(commands_to_run, threads):
         # ThreadPoolExecutor because otherwise the extra commands can't be
         # easily stopped with CTRL-C or whenever an Exception is raised.
         group_of_commands = [cmd for cmd in group_of_commands if cmd]
+
         with ThreadPoolExecutor(len(group_of_commands)) as executor:
-            results = executor.map(run_shell_command, group_of_commands)
-            list(results)  # raises Exception from any of the threads
+            future_to_command = {executor.submit(run_shell_command, cmd): cmd
+                                for cmd in group_of_commands}
+
+            for future in as_completed(future_to_command):
+                command = future_to_command[future]
+                future.result()  # raises Exception from any of the threads
+                yield command

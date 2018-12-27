@@ -11,5 +11,5 @@ from lib.run_parallel_commands import run_parallel_commands
 from lib.temp_filepath import temp_filepath
 from lib.tabix_command_from_chromosome_regions import tabix_command_from_chromosome_regions
 from lib.tabix_commands_from_bedfile_df import tabix_commands_from_bedfile_df
-from lib.run_pipeline import run_pipeline
 from lib.cleanup_temp_files import cleanup_temp_files
+from lib.run_pipeline import run_pipeline

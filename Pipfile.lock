@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9fa8a4cb0e70a62ff0ff944f9dc1501365e676a9946a9434253c48bed6d73a6f"
+            "sha256": "55a19858a0381f6084d22c59698798a4b657c429a3eca91da884ffcf1bd14884"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,6 +16,10 @@
         ]
     },
     "default": {
+        "bed-to-tabix": {
+            "editable": true,
+            "path": "."
+        },
         "coloredlogs": {
             "hashes": [
                 "sha256:34fad2e342d5a559c31b6c889e8d14f97cb62c47d9a2ae7b5ed14ea10a79eff8",
@@ -28,10 +32,6 @@
                 "sha256:49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"
             ],
             "version": "==0.6.2"
-        },
-        "e1839a8": {
-            "editable": true,
-            "path": "."
         },
         "humanfriendly": {
             "hashes": [
