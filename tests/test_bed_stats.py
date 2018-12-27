@@ -7,14 +7,14 @@ def test_bed_stats():
     regions = pd.DataFrame({
         'chrom': ['1', '1', 'X', 'Y'],
         'start': [100, 100, 100, 100],
-        'stop': [110, 200, 200, 210],
+        'stop': [101, 101, 101, 110],
     })
     result = bed_stats(regions)
 
     assert result == {
         'n_regions': 4,
-        'shorter_region_length': 10,
-        'total_bases': 320,
-        'longer_region_length': 110,
+        'shorter_region_length': 1,
+        'longer_region_length': 10,
+        'total_bases': 13,
         'n_chromosomes': 3,
     }

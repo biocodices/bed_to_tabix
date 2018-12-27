@@ -12,6 +12,7 @@ from ..lib import (
     run_parallel_commands,
     merge_vcfs,
     cleanup_temp_files,
+    fix_zero_length_regions,
 )
 
 
@@ -55,6 +56,7 @@ def run_pipeline(bedfiles,
         logger.info(f' * {arg} = {values[arg]}')
 
     regions = merge_beds(bedfiles)
+    regions = fix_zero_length_regions(regions)
 
     msg = ('Found {n_regions} regions in {n_chromosomes} chromosomes, '
            'spanning {total_bases} bases')
