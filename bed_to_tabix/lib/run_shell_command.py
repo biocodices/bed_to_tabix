@@ -4,7 +4,7 @@ from bed_to_tabix.lib import logger
 
 
 def run_shell_command(command, ix=None):
-    """Run a *command* (string) in the shell."""
+    """Run a *command* (string) in the shell. Return the output."""
     if not ix:
         ix = id(command)
 
@@ -22,3 +22,5 @@ def run_shell_command(command, ix=None):
 
     out = out.decode('utf-8')
     logger.debug(f'[{ix}] Output: {out}')
+
+    return out
