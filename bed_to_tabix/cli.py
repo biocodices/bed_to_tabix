@@ -163,7 +163,7 @@ def main():
         sys.exit()
     finally:
         if failed_exit:
-            do_cleanup()
+            do_cleanup(arguments)
 
 def do_cleanup(arguments):
     if arguments['--no-cleanup']:
