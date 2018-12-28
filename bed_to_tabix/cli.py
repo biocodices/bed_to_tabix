@@ -4,7 +4,7 @@ Welcome to bed_to_tabix! This tool will download the genotypes from
 The 1,000 Genomes Proyect's in the regions defined in one or more BED files.
 
 Usage:
-    bed_to_tabix --in BEDFILE... [options]
+    bed_to_tabix --in BEDFILE... --outlabel LABEL [options]
     bed_to_tabix (--help | --version)
 
 Options:
@@ -13,11 +13,11 @@ Options:
                       the --in flag with a different .bed each time for more
                       than one input file.
 
-    --out VCFFILE     Output filepath for the VCF. You don't need to add
-                      '.vcf' to the name. If not set, bed_to_tabix will
-                      use the input filepath and replace .bed with .vcf.gz.
-                      WARNING: if a file with the same filename exists, it
-                      will be overwritten without asking.
+    --outlabel LABEL  Output label for the files. You don't need to add
+                      '.vcf' to the label.
+                      WARNING: filenames with the same label that match
+                      the requested result will be overwritten without asking.
+
     --threads N       Perform the downloads in N parallel threads. Default: 6.
 
     --unzipped        If set, the downloaded VCF will not be gzipped.
@@ -73,7 +73,7 @@ Options:
 
 import sys
 from os import getcwd, environ
-from os.path import basename, join, isfile
+from os.path import basename, join
 import logging
 from subprocess import CalledProcessError
 
@@ -101,16 +101,10 @@ def parse_arguments(arguments):
     else:
         arguments['--threads'] = defaults['--threads']
 
-    if not arguments['--out']:
+    if not arguments['--outlabel']:
         filename = '__'.join(basename(bed).replace('.bed', '')
                              for bed in arguments['--in'])
-        arguments['--out'] = join(getcwd(), filename)
-
-    if not arguments['--out'].endswith('.vcf'):
-        arguments['--out'] += '.vcf'
-
-    if not arguments['--unzipped']:
-        arguments['--out'] += '.gz'
+        arguments['--outlabel'] = join(getcwd(), filename)
 
     varnames = ['bcftools', 'tabix', 'bgzip', 'gatk3', 'java',
                 'reference_fasta']
@@ -125,12 +119,6 @@ def parse_arguments(arguments):
                 print(f'Missing either {parameter} ' +
                       f'or ENV variable {env_varname}')
                 sys.exit()
-
-    if '--force' not in arguments and isfile(arguments['--out']):
-        msg = ('Output file {} already exists!\nUse --force or -f to overwrite '
-               'it or change the output filename with --out.')
-        logger.warning(msg.format(arguments['--out']))
-        sys.exit()
 
     return arguments
 
@@ -149,7 +137,7 @@ def main():
         run_pipeline(
             bedfiles=arguments['--in'],
             threads=arguments['--threads'],
-            outfile=arguments['--out'],
+            outlabel=arguments['--outlabel'],
             one_vcf_per_chrom=arguments['--one-vcf-per-chrom'],
             remove_SVs=arguments['--remove-SVs'],
             gzip_output=(not arguments['--unzipped']),
