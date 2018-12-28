@@ -10,6 +10,7 @@ pytest = "*"
 pandas = "*"
 more-itertools = "*"
 bed-to-tabix = {editable = true,path = "."}
+termcolor = "*"
 
 [requires]
 python_version = "3.6"

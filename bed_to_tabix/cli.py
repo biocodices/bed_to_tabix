@@ -76,7 +76,7 @@ from subprocess import CalledProcessError
 from docopt import docopt
 import coloredlogs
 
-from .lib import run_pipeline, cleanup_temp_files
+from .lib import run_pipeline, cleanup_temp_files, BANNER
 from .package_info import PACKAGE_INFO
 
 
@@ -138,13 +138,15 @@ def main():
     loglevel = 'DEBUG' if arguments['--debug'] else 'INFO'
     coloredlogs.install(level=loglevel)
 
+    print(BANNER)
+
     failed_exit = False
     try:
         run_pipeline(
             bedfiles=arguments['--in'],
             threads=arguments['--threads'],
             outfile=arguments['--out'],
-            merge_chrom_vcfs=arguments['--one-vcf-per-chrom'],
+            one_vcf_per_chrom=arguments['--one-vcf-per-chrom'],
             gzip_output=(not arguments['--unzipped']),
             dry_run=arguments['--dry-run'],
             path_to_bcftools=arguments['--path-to-bcftools'],
@@ -153,7 +155,7 @@ def main():
             path_to_gatk3=arguments['--path-to-gatk3'],
             path_to_bgzip=arguments['--path-to-bgzip'],
             path_to_reference_fasta=arguments['--path-to-reference-fasta'],
-            do_cleanup=(not arguments['--no-cleanup'])
+            no_cleanup=arguments['--no-cleanup'],
             # The FTP option is failing and is not fixed yet:
             # http=arguments['--http'],
         )
@@ -165,6 +167,9 @@ def main():
         message = e.args[0] # This message comes from run_shell_command.py
         logger.error(message)
         failed_exit = True
+        sys.exit()
+    except FileNotFoundError as e:
+        logger.error(e)
         sys.exit()
     finally:
         if failed_exit:

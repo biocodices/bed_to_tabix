@@ -20,7 +20,7 @@ def test_run_pipeline(path_to_tabix, path_to_bcftools, path_to_bgzip,
         bedfiles=[fn],
         threads=8,
         outfile=out_fn,
-        merge_chrom_vcfs=True,
+        one_vcf_per_chrom=False,
         path_to_java=path_to_java,
         path_to_gatk3=path_to_gatk3,
         path_to_reference_fasta=path_to_reference_fasta,
@@ -68,7 +68,7 @@ def test_run_pipeline(path_to_tabix, path_to_bcftools, path_to_bgzip,
     out_fn = str(tmpdir.join('out.vcf'))
 
     args['outfile'] = out_fn
-    args['merge_chrom_vcfs'] = False
+    args['one_vcf_per_chrom'] = False
     run_pipeline(**args)
 
     for chrom, snp in zip(['Y', '8', 'X'], variants_expected):
@@ -85,7 +85,7 @@ def test_run_pipeline(path_to_tabix, path_to_bcftools, path_to_bgzip,
     ##### FTP URLs and non-gzipped output
 
     out_fn = str(tmpdir.join('out-nonzipped.vcf'))
-    args['merge_chrom_vcfs'] = True
+    args['one_vcf_per_chrom'] = True
     args['outfile'] = out_fn
     args['http'] = False
     args['gzip_output'] = False
