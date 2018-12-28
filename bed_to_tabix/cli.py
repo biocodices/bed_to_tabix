@@ -156,9 +156,9 @@ def main():
         logger.warning('User stopped the program. Cleanup and exit.')
         failed_exit = True
         sys.exit()
-    except CalledProcessError as error:
-        msg = 'The following command failed (code: {0}). Cleanup and exit: {1}'
-        logger.warning(msg.format(*error.args))
+    except CalledProcessError as e:
+        message = e.args(0) # This message comes from run_shell_command.py
+        logger.error(message)
         failed_exit = True
         sys.exit()
     finally:
