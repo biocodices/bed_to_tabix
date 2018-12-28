@@ -4,6 +4,8 @@ from ..lib import tabix_command_from_chromosome_regions
 def tabix_commands_from_bedfile_df(bedfile_df,
                                    path_to_tabix,
                                    path_to_bgzip,
+                                   path_to_bcftools,
+                                   remove_SVs=False,
                                    http=False):
     """
     Generate the tabix commands to download 1000 Genomes genotypes for the
@@ -18,6 +20,8 @@ def tabix_commands_from_bedfile_df(bedfile_df,
             regions_df,
             path_to_tabix=path_to_tabix,
             path_to_bgzip=path_to_bgzip,
+            path_to_bcftools=path_to_bcftools,
+            remove_SVs=remove_SVs,
             http=http
         )
         commands_to_run.append(command)

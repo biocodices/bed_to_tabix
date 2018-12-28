@@ -55,6 +55,7 @@ def test_run_pipeline(path_to_tabix, path_to_bcftools, path_to_bgzip,
     args['dry_run'] = False
     args['http'] = True
     args['gzip_output'] = True
+    args['remove_SVs'] = True
     run_pipeline(**args)
 
     with gzip.open(out_fn) as f:
@@ -63,12 +64,16 @@ def test_run_pipeline(path_to_tabix, path_to_bcftools, path_to_bgzip,
     for item in samples_expected + variants_expected:
         assert item in content
 
+    # This variant overlaps with rs268, so it's downloaded with it.
+    # Here, we check it was removed:
+    assert 'esv3616553' not in content
+
     ##### HTTP URLs, gzipped output, don't merge the result
 
     out_fn = str(tmpdir.join('out.vcf'))
 
     args['outfile'] = out_fn
-    args['one_vcf_per_chrom'] = False
+    args['one_vcf_per_chrom'] = True
     run_pipeline(**args)
 
     for chrom, snp in zip(['Y', '8', 'X'], variants_expected):
@@ -85,7 +90,7 @@ def test_run_pipeline(path_to_tabix, path_to_bcftools, path_to_bgzip,
     ##### FTP URLs and non-gzipped output
 
     out_fn = str(tmpdir.join('out-nonzipped.vcf'))
-    args['one_vcf_per_chrom'] = True
+    args['one_vcf_per_chrom'] = False
     args['outfile'] = out_fn
     args['http'] = False
     args['gzip_output'] = False

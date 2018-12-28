@@ -7,11 +7,15 @@ from ..lib import thousand_genomes_chromosome_url
 def tabix_command_from_chromosome_regions(regions_df,
                                           path_to_tabix,
                                           path_to_bgzip,
+                                          path_to_bcftools,
+                                          remove_SVs=False,
                                           http=False):
     """
     Generate a tabix command to download the regions present in regions_df
     from The 1000 Genomes Project servers via FTP or HTTP. Requires that all
     regions are located in the same chromosome.
+
+    Set remove_SVs=True to remove the structural variants.
 
     Returns a tuple: (tabix_command, destination_filepath)
     """
@@ -30,10 +34,10 @@ def tabix_command_from_chromosome_regions(regions_df,
 
     chrom_1kg_url = thousand_genomes_chromosome_url(chrom, http)
     # Generate the tabix command to download 1kG genotypes for these regions
-    tabix_command = (
-        f'{path_to_tabix} -fh -R {chrom_bedfile} {chrom_1kg_url} | ' +
-        f'{path_to_bgzip} > {dest_file}'
-    )
+    tabix_command = f'{path_to_tabix} -fh -R {chrom_bedfile} {chrom_1kg_url} | '
+    if remove_SVs:
+        tabix_command += f"{path_to_bcftools} filter -e 'INFO/VT == \"SV\"' | "
+    tabix_command += f'{path_to_bgzip} > {dest_file}'
 
     chrom_index_file = basename(chrom_1kg_url) + '.tbi'
 

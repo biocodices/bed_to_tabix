@@ -6,17 +6,20 @@ import pandas as pd
 from bed_to_tabix.lib import tabix_command_from_chromosome_regions
 
 
-def test_tabix_command_from_chromosome_regions(path_to_tabix, path_to_bgzip):
+def test_tabix_command_from_chromosome_regions(path_to_tabix, path_to_bgzip,
+                                               path_to_bcftools):
     regions = pd.DataFrame({'chrom': ['1', '1']})
     result = tabix_command_from_chromosome_regions(
         regions,
         path_to_tabix=path_to_tabix,
         path_to_bgzip=path_to_bgzip,
-        http=True
+        path_to_bcftools=path_to_bcftools,
+        remove_SVs=True,
+        http=True,
     )
 
     assert re.search(
-        r'.*tabix -fh -R .*chr_1.bed http.* | .*bgzip .*chr_1.vcf.gz',
+        r'.*tabix -fh -R .*chr_1.bed http.* | *.bcftools filter *. | .*bgzip .*chr_1.vcf.gz',
         result['cmd']
     )
     assert result['chrom_bedfile'].endswith('chr_1.bed')
@@ -27,6 +30,7 @@ def test_tabix_command_from_chromosome_regions(path_to_tabix, path_to_bgzip):
         regions,
         path_to_tabix=path_to_tabix,
         path_to_bgzip=path_to_bgzip,
+        path_to_bcftools=path_to_bcftools,
         http=False,
     )
     assert 'http' not in result['cmd']
@@ -38,5 +42,6 @@ def test_tabix_command_from_chromosome_regions(path_to_tabix, path_to_bgzip):
             regions,
             path_to_tabix=path_to_tabix,
             path_to_bgzip=path_to_bgzip,
+            path_to_bcftools=path_to_bcftools,
             http=True
         )

@@ -27,6 +27,7 @@ def run_pipeline(bedfiles,
                  path_to_gatk3,
                  path_to_reference_fasta,
                  one_vcf_per_chrom=False,
+                 remove_SVs=True,
                  gzip_output=True,
                  dry_run=False,
                  no_cleanup=False,
@@ -42,6 +43,9 @@ def run_pipeline(bedfiles,
     - outfile: path to the VCF that will be produced.
     - one_vcf_per_chrom: set to True if you want separate VCF files per
       chromosome. Otherwise, the result will be merged in a single VCF.
+    - remove_SVs: whether to remove structural variants or not from the
+      downloaded genotypes. SVs sometimes give problems when merging the
+      1000 Genomes VCFs.
     - path_to...: path to executables of {bcftools,tabix,bgzip,gatk3,java}.
     - path_to_reference_fasta: path to the reference .fasta that will be used
       internally by GATK3 CombineVariants to merge 1KG VCFs.
@@ -74,7 +78,9 @@ def run_pipeline(bedfiles,
         regions,
         path_to_tabix=path_to_tabix,
         path_to_bgzip=path_to_bgzip,
-        http=http
+        path_to_bcftools=path_to_bcftools,
+        remove_SVs=remove_SVs,
+        http=http,
     )
 
     if dry_run:
@@ -117,4 +123,8 @@ def run_pipeline(bedfiles,
         cleanup_temp_files()
 
     elapsed_time = format_timespan(time.time() - t0)
-    logger.info('Done! Took {}. Check {}'.format(elapsed_time, outfile))
+
+    if one_vcf_per_chrom:
+        logger.info(f'Done! Took {elapsed_time}. Check {dirname(outfile)}/')
+    else:
+        logger.info(f'Done! Took {elapsed_time}. Check {outfile}')
