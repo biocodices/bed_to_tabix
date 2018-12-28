@@ -22,11 +22,11 @@ def tabix_command_from_chromosome_regions(regions_df,
 
     # Create a temporary bed file with this chromosome's regions
     # It will be used in the tabix command, as the -R parameter
-    chrom_bedfile = temp_filepath('chr_{}.bed'.format(chrom))
+    chrom_bedfile = temp_filepath(f'chr_{chrom}.bed')
     regions_df.to_csv(chrom_bedfile, sep='\t', header=False, index=False)
 
     # Define the destination VCF filename for this chromosome
-    dest_file = temp_filepath('chr_{}.vcf.gz'.format(chrom))
+    dest_file = temp_filepath(f'chr_{chrom}.vcf.gz')
 
     chrom_1kg_url = thousand_genomes_chromosome_url(chrom, http)
     # Generate the tabix command to download 1kG genotypes for these regions
@@ -38,6 +38,7 @@ def tabix_command_from_chromosome_regions(regions_df,
     chrom_index_file = basename(chrom_1kg_url) + '.tbi'
 
     return {'cmd': tabix_command,
+            'chromosome': chrom,
             'dest_file': dest_file,
             'chrom_bedfile': chrom_bedfile,
             'chrom_index_file': chrom_index_file}

@@ -21,6 +21,7 @@ def test_tabix_command_from_chromosome_regions(path_to_tabix, path_to_bgzip):
     )
     assert result['chrom_bedfile'].endswith('chr_1.bed')
     assert result['dest_file'].endswith('chr_1.vcf.gz')
+    assert result['chromosome'] == '1'
 
     result = tabix_command_from_chromosome_regions(
         regions,

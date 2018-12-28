@@ -1,8 +1,9 @@
 import time
 import inspect
+import shutil
+from os.path import dirname
 
 from humanfriendly import format_timespan
-from more_itertools import one
 
 from ..lib import (
     logger,
@@ -25,6 +26,7 @@ def run_pipeline(bedfiles,
                  path_to_java,
                  path_to_gatk3,
                  path_to_reference_fasta,
+                 merge_chrom_vcfs=True,
                  gzip_output=True,
                  dry_run=False,
                  do_cleanup=True,
@@ -80,28 +82,33 @@ def run_pipeline(bedfiles,
 
     logger.info('Execute tabix in batches of {} to download the '
                 '1kG genotypes (this might take a while!)'.format(threads))
+    command_to_dest_file = {c['cmd']: c['dest_file'] for c in tabix_commands}
     completed_commands = run_parallel_commands(
-        [c['cmd'] for c in tabix_commands],
+        list(command_to_dest_file.keys()),
         threads=threads
     )
     for completed_command in completed_commands:
-        dest_file = one(cmd for cmd in tabix_commands
-                        if cmd['cmd'] == completed_command)['dest_file']
+        dest_file = command_to_dest_file[completed_command]
         logger.info(f' * Downloaded: {dest_file}')
 
-    logger.info('Merge the downloaded temporary .vcf.gz files.')
-
-    gzipped_vcfs = [result['dest_file'] for result in tabix_commands]
-    merge_vcfs(
-        gzipped_vcfs,
-        outfile,
-        path_to_java=path_to_java,
-        path_to_gatk3=path_to_gatk3,
-        path_to_tabix=path_to_tabix,
-        path_to_bgzip=path_to_bgzip,
-        path_to_reference_fasta=path_to_reference_fasta,
-        gzip_output=gzip_output,
-    )
+    if merge_chrom_vcfs:
+        logger.info('Merge the downloaded temporary .vcf.gz files.')
+        merge_vcfs(
+            gzipped_vcfs=[result['dest_file'] for result in tabix_commands],
+            outfile=outfile,
+            path_to_java=path_to_java,
+            path_to_gatk3=path_to_gatk3,
+            path_to_tabix=path_to_tabix,
+            path_to_bgzip=path_to_bgzip,
+            path_to_reference_fasta=path_to_reference_fasta,
+            gzip_output=gzip_output,
+        )
+    else:
+        logger.info('Separate chromosome files requested. Moving from tempdir.')
+        for c in tabix_commands:
+            out_fn = outfile.replace('.vcf', f'.{c["chromosome"]}.vcf')
+            logger.debug(' * {gzipped_chrom_vcf} -> {out_fn}')
+            shutil.copy(c['dest_file'], out_fn)
 
     if do_cleanup:
         cleanup_temp_files()

@@ -22,6 +22,10 @@ Options:
 
     --unzipped        If set, the downloaded VCF will not be gzipped.
 
+    --one-vcf-per-chrom      If set, keep separate VCFs per chromosome.
+                             Otherwise, the result will be merged in a single
+                             multi-chromosome VCF.
+
     -f --force        If set, it will overwrite the output file if it exists.
 
     --dry-run         If set, it will just print the tabix commands to
@@ -140,6 +144,7 @@ def main():
             bedfiles=arguments['--in'],
             threads=arguments['--threads'],
             outfile=arguments['--out'],
+            merge_chrom_vcfs=arguments['--one-vcf-per-chrom'],
             gzip_output=(not arguments['--unzipped']),
             dry_run=arguments['--dry-run'],
             path_to_bcftools=arguments['--path-to-bcftools'],
