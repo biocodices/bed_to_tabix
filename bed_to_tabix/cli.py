@@ -157,7 +157,7 @@ def main():
         failed_exit = True
         sys.exit()
     except CalledProcessError as e:
-        message = e.args(0) # This message comes from run_shell_command.py
+        message = e.args[0] # This message comes from run_shell_command.py
         logger.error(message)
         failed_exit = True
         sys.exit()
