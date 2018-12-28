@@ -7,20 +7,17 @@ import logging
 from bed_to_tabix.lib import run_pipeline
 
 
-def test_run_pipeline(path_to_tabix, path_to_bcftools, path_to_bgzip,
-                      path_to_java, path_to_gatk3, path_to_reference_fasta,
-                      tmpdir, caplog):
+@pytest.fixture
+def args(path_to_bcftools, path_to_bgzip, path_to_java,
+                      path_to_gatk3, path_to_reference_fasta, path_to_tabix,
+                      caplog, tmpdir):
 
     caplog.set_level(logging.DEBUG)
 
-    fn = pytest.helpers.file('real_regions_to_test.bed')
-    out_fn = str(tmpdir.join('out.vcf.gz'))
-
-    args = dict(
-        bedfiles=[fn],
+    return dict(
+        bedfiles=[pytest.helpers.file('real_regions_to_test.bed')],
+        outlabel = str(tmpdir.join('out')),
         threads=8,
-        outfile=out_fn,
-        one_vcf_per_chrom=False,
         path_to_java=path_to_java,
         path_to_gatk3=path_to_gatk3,
         path_to_reference_fasta=path_to_reference_fasta,
@@ -29,36 +26,39 @@ def test_run_pipeline(path_to_tabix, path_to_bcftools, path_to_bgzip,
         path_to_bcftools=path_to_bcftools,
     )
 
-    ##### Dry run
 
+variants_expected = [
+    'rs200162368',
+    'rs268',
+    'rs35661435',
+] # This order of variants is used below! Chromosomes: Y, 8, X
+
+samples_expected = [
+    'HG00096', # male sample (it will be present in chrY VCF)
+    'NA21135', # male sample (it will be present in chrY VCF)
+]
+
+
+def test_run_pipeline_dry_run(tmpdir, args):
     args['dry_run'] = True
+
     result = run_pipeline(**args)
 
-    for cmd in result:
-        print(cmd)
-
-    assert not isfile(out_fn)
+    assert not isfile(tmpdir.join('out.vcf.gz'))
+    assert not isfile(tmpdir.join('out.vcf'))
+    assert all('cmd' in cmd for cmd in result) # Commands
     assert len(result) == 3 # Three tabix commands to run for three chromosomes
 
-    variants_expected = [
-        'rs200162368',
-        'rs268',
-        'rs35661435',
-    ]
-    samples_expected = [
-        'HG00096', # male sample (it will be present in chrY VCF)
-        'NA21135', # male sample (it will be present in chrY VCF)
-    ]
-
-    ##### HTTP URLs and gzipped output
-
+def test_run_pipeline_http_gzipped_out(tmpdir, args):
     args['dry_run'] = False
     args['http'] = True
     args['gzip_output'] = True
     args['remove_SVs'] = True
+    args['one_vcf_per_chrom'] = False
+
     run_pipeline(**args)
 
-    with gzip.open(out_fn) as f:
+    with gzip.open(tmpdir.join('out.vcf.gz')) as f:
         content = f.read().decode('utf-8')
 
     for item in samples_expected + variants_expected:
@@ -68,18 +68,21 @@ def test_run_pipeline(path_to_tabix, path_to_bcftools, path_to_bgzip,
     # Here, we check it was removed:
     assert 'esv3616553' not in content
 
-    ##### HTTP URLs, gzipped output, don't merge the result
+    # Check the merged BED is also written
+    bed_out = tmpdir.join('out.merged-sorted-expanded.bed')
+    assert isfile(bed_out)
 
-    out_fn = str(tmpdir.join('out.vcf'))
+def test_run_pipeline_dont_merge_result(tmpdir, args):
+    outlabel = str(tmpdir.join('out.vcf.gz')) # Check extra ".vcf.gz" is handled
 
-    args['outfile'] = out_fn
+    args['outlabel'] = outlabel
     args['one_vcf_per_chrom'] = True
+
     run_pipeline(**args)
 
     for chrom, snp in zip(['Y', '8', 'X'], variants_expected):
-        chrom_fn = out_fn.replace('.vcf', f'.{chrom}.vcf')
-        print(chrom_fn)
-        with gzip.open(chrom_fn) as f:
+        expected_chrom_fn = tmpdir.join(f'out.chr{chrom}.vcf.gz')
+        with gzip.open(expected_chrom_fn) as f:
             content = f.read().decode('utf-8')
 
         assert snp in content
@@ -87,16 +90,18 @@ def test_run_pipeline(path_to_tabix, path_to_bcftools, path_to_bgzip,
         for sample in samples_expected:
             assert sample in content
 
-    ##### FTP URLs and non-gzipped output
+def test_run_pipeline_ftp_non_gzipped_output(tmpdir, args):
+    outlabel = str(tmpdir.join('out-nonzipped'))
 
-    out_fn = str(tmpdir.join('out-nonzipped.vcf'))
     args['one_vcf_per_chrom'] = False
-    args['outfile'] = out_fn
+    args['outlabel'] = outlabel
     args['http'] = False
     args['gzip_output'] = False
+
     run_pipeline(**args)
 
-    with open(out_fn) as f:
+    expected_fn = tmpdir.join('out-nonzipped.vcf')
+    with open(expected_fn) as f:
         content = f.read()
 
     for item in samples_expected + variants_expected:

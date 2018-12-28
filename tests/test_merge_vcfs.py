@@ -33,19 +33,21 @@ def test_merge_vcfs(tmpdir, path_to_java, path_to_gatk3, path_to_bgzip,
         print(f'[Test preparation] Compress: {command}')
         subprocess.check_output(command, shell=True)
 
-    outfile1 = str(tmpdir.join('test_out.vcf.gz'))
+    outlabel1 = str(tmpdir.join('test_out_1'))
     merge_vcfs(gzipped_copies,
-               outfile1,
+               outlabel=outlabel1,
+               gzip_output=True,
                path_to_java=path_to_java,
                path_to_tabix=path_to_tabix,
                path_to_gatk3=path_to_gatk3,
                path_to_reference_fasta=path_to_reference_fasta,
                path_to_bgzip=path_to_bgzip)
 
-    assert isfile(outfile1)
-    assert getsize(outfile1) > 0
+    expected_vcf = f'{outlabel1}.vcf.gz'
+    assert isfile(expected_vcf)
+    assert getsize(expected_vcf) > 0
 
-    with gzip.open(outfile1) as f:
+    with gzip.open(expected_vcf) as f:
         lines = [l.decode('utf-8') for l in f]
     genotypes = [l for l in lines if not l.startswith('#')]
 
@@ -57,20 +59,21 @@ def test_merge_vcfs(tmpdir, path_to_java, path_to_gatk3, path_to_bgzip,
     assert 'rs21' in genotypes[4]
     assert 'rs22' in genotypes[5]
 
-    outfile2 = str(tmpdir.join('test_out.vcf'))
+    outlabel2 = str(tmpdir.join('test_out_2'))
     merge_vcfs(gzipped_copies,
-               outfile2,
+               outlabel=outlabel2,
+               gzip_output=False,
                path_to_java=path_to_java,
                path_to_tabix=path_to_tabix,
                path_to_gatk3=path_to_gatk3,
                path_to_reference_fasta=path_to_reference_fasta,
-               path_to_bgzip=path_to_bgzip,
-               gzip_output=False)
+               path_to_bgzip=path_to_bgzip)
 
-    assert isfile(outfile2)
-    assert getsize(outfile2) > 0
+    expected_fn = f'{outlabel2}.vcf'
+    assert isfile(expected_fn)
+    assert getsize(expected_fn) > 0
 
-    with open(outfile2) as f:
+    with open(expected_fn) as f:
         lines = [l for l in f]
     genotypes = [l for l in lines if not l.startswith('#')]
 

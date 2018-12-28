@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 
-from bed_to_tabix.lib import fix_zero_length_regions
+from bed_to_tabix.lib import expand_zero_length_regions
 
 
 def test_fix_zero_length_regions():
@@ -9,7 +9,7 @@ def test_fix_zero_length_regions():
         'start': [100, 200],
         'stop': [100, 210],
     })
-    result = fix_zero_length_regions(regions)
+    result = expand_zero_length_regions(regions)
 
     # Fix the SNP, don't fix the indel:
     assert list(result['start']) == [99, 200]
@@ -20,4 +20,4 @@ def test_fix_zero_length_regions():
         'stop': [99], # 99 < 100 !
     })
     with pytest.raises(ValueError):
-        fix_zero_length_regions(regions)
+        expand_zero_length_regions(regions)

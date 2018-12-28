@@ -7,7 +7,7 @@ from .merge_beds import merge_beds
 from .run_shell_command import run_shell_command
 from .merge_vcfs import merge_vcfs
 from .thousand_genomes_chromosome_url import thousand_genomes_chromosome_url
-from .fix_zero_length_regions import fix_zero_length_regions
+from .expand_zero_length_regions import expand_zero_length_regions
 from .run_parallel_commands import run_parallel_commands
 from .temp_filepath import temp_filepath
 from .tabix_command_from_chromosome_regions import tabix_command_from_chromosome_regions

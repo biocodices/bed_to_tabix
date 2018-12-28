@@ -26,6 +26,10 @@ Options:
                              Otherwise, the result will be merged in a single
                              multi-chromosome VCF.
 
+    --remove-SVs      Set if you want to remove the structural variants from
+                      the downloaded genotypes (sometimes the merge fails if
+                      you keep them).
+
     -f --force        If set, it will overwrite the output file if it exists.
 
     --dry-run         If set, it will just print the tabix commands to
@@ -147,6 +151,7 @@ def main():
             threads=arguments['--threads'],
             outfile=arguments['--out'],
             one_vcf_per_chrom=arguments['--one-vcf-per-chrom'],
+            remove_SVs=arguments['--remove-SVs'],
             gzip_output=(not arguments['--unzipped']),
             dry_run=arguments['--dry-run'],
             path_to_bcftools=arguments['--path-to-bcftools'],

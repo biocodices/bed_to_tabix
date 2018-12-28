@@ -1,7 +1,6 @@
 import time
 import inspect
 import shutil
-from os.path import dirname
 
 from humanfriendly import format_timespan
 
@@ -13,13 +12,13 @@ from ..lib import (
     run_parallel_commands,
     merge_vcfs,
     cleanup_temp_files,
-    fix_zero_length_regions,
+    expand_zero_length_regions,
 )
 
 
 def run_pipeline(bedfiles,
                  threads,
-                 outfile,
+                 outlabel,
                  path_to_bcftools,
                  path_to_tabix,
                  path_to_bgzip,
@@ -33,14 +32,18 @@ def run_pipeline(bedfiles,
                  no_cleanup=False,
                  http=True):
     """
-    Take a list of BED files and produce a single VCF file with the genotypes
-    of 1KG samples at those coordinates.
+    Take a list of BED files and produce one (or one per chrom) VCF file with
+    the genotypes of 1KG samples at those coordinates. Also produces the
+    BED resulting from the merge/sort/zero-length-region-expansion of the
+    input BEDs.
 
     Inputs:
 
     - bedfiles: a list of BED files with the regions of interest.
     - threads: how many parallel downloads from 1KG servers to run.
-    - outfile: path to the VCF that will be produced.
+    - outlabel: path to the VCF prefix that will be produced. Do not include
+      ".vcf" in the name, it's just the prefix that will be used wither for
+      one or many VCFs and for the merged BED.
     - one_vcf_per_chrom: set to True if you want separate VCF files per
       chromosome. Otherwise, the result will be merged in a single VCF.
     - remove_SVs: whether to remove structural variants or not from the
@@ -49,7 +52,8 @@ def run_pipeline(bedfiles,
     - path_to...: path to executables of {bcftools,tabix,bgzip,gatk3,java}.
     - path_to_reference_fasta: path to the reference .fasta that will be used
       internally by GATK3 CombineVariants to merge 1KG VCFs.
-    - gzip_output: should the output be gzipped?
+    - gzip_output: should the output be gzipped? This only applies to the
+      merged output. The separate chrom VCFs are always gzipped.
     - dry_run: set to True to only print and return the tabix commands that
       would be run.
     - http: use HTTP URLs, set to false to use FTP URLs from 1KG.
@@ -57,6 +61,12 @@ def run_pipeline(bedfiles,
       files (useful for debugging).
     """
     t0 = time.time()
+
+    outlabel = outlabel.replace('.vcf', '').replace('.gz', '')
+
+    if one_vcf_per_chrom and not gzip_output:
+        logger.warning('`gzip_output` requested, but the VCFs per chromosome ' +
+                       'will be gzipped (that option works for the merged VCF)')
 
     frame = inspect.currentframe()
     args, _, _, values = inspect.getargvalues(frame)
@@ -67,11 +77,15 @@ def run_pipeline(bedfiles,
     regions = merge_beds(bedfiles)
 
     logger.info('Expand zero-length regions.')
-    regions = fix_zero_length_regions(regions)
+    regions = expand_zero_length_regions(regions)
 
     msg = ('Found {n_regions} regions in {n_chromosomes} chromosomes, '
            'spanning {total_bases} bases.')
     logger.info(msg.format(**bed_stats(regions)))
+
+    bed_out = f'{outlabel}.merged-sorted-expanded.bed'
+    regions.to_csv(bed_out, index=False, sep='\t')
+    logger.info(f'Written merged/sorted/expanded BED to: {bed_out}')
 
     logger.info('Generate the tabix commands for the given regions.')
     tabix_commands = tabix_commands_from_bedfile_df(
@@ -103,14 +117,14 @@ def run_pipeline(bedfiles,
     if one_vcf_per_chrom:
         logger.info('Separate chromosome files requested. Moving from tempdir.')
         for c in tabix_commands:
-            out_fn = outfile.replace('.vcf', f'.{c["chromosome"]}.vcf')
+            out_fn = f'{outlabel}.chr{c["chromosome"]}.vcf.gz'
             logger.debug(f' * {c["dest_file"]} -> {out_fn}')
             shutil.copy(c['dest_file'], out_fn)
     else:
         logger.info('Merge the downloaded temporary .vcf.gz files.')
         merge_vcfs(
             gzipped_vcfs=[result['dest_file'] for result in tabix_commands],
-            outfile=outfile,
+            outlabel=outlabel,
             path_to_java=path_to_java,
             path_to_gatk3=path_to_gatk3,
             path_to_tabix=path_to_tabix,
@@ -123,8 +137,4 @@ def run_pipeline(bedfiles,
         cleanup_temp_files()
 
     elapsed_time = format_timespan(time.time() - t0)
-
-    if one_vcf_per_chrom:
-        logger.info(f'Done! Took {elapsed_time}. Check {dirname(outfile)}/')
-    else:
-        logger.info(f'Done! Took {elapsed_time}. Check {outfile}')
+    logger.info(f'Done! Took {elapsed_time}. Check {outlabel}*')
