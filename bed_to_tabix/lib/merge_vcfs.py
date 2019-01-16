@@ -31,7 +31,7 @@ def merge_vcfs(gzipped_vcfs, outlabel, path_to_reference_fasta, path_to_bgzip,
 
     tags = [basename(gzipped_vcf) for gzipped_vcf in gzipped_vcfs]
     for gzipped_vcf, tag in zip(gzipped_vcfs, tags):
-        command += f'--variant:{tag} {gzipped_vcf} '
+        command += f'--variant:{tag},VCF {gzipped_vcf} '
 
     command += (f'--genotypemergeoption PRIORITIZE '+
                 f'-priority {",".join(tags)} ' +
