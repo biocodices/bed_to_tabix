@@ -126,9 +126,10 @@ def parse_arguments(arguments):
 def main():
     arguments = parse_arguments(docopt(__doc__))
 
+    logger = logging.getLogger('bed_to_tabix')
     coloredlogs.DEFAULT_LOG_FORMAT = '[@%(hostname)s %(asctime)s] %(message)s'
     loglevel = 'DEBUG' if arguments['--debug'] else 'INFO'
-    coloredlogs.install(level=loglevel)
+    coloredlogs.install(level=loglevel, logger=logger)
 
     print(BANNER)
 
