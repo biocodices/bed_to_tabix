@@ -125,6 +125,7 @@ def run_pipeline(bedfiles,
         merge_vcfs(
             gzipped_vcfs=[result['dest_file'] for result in tabix_commands],
             outlabel=outlabel,
+            path_to_bcftools=path_to_bcftools,
             path_to_java=path_to_java,
             path_to_gatk3=path_to_gatk3,
             path_to_tabix=path_to_tabix,

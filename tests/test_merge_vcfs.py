@@ -10,8 +10,8 @@ from bed_to_tabix.lib import merge_vcfs
 
 
 def test_merge_vcfs(tmpdir, path_to_java, path_to_gatk3, path_to_bgzip,
-                    path_to_tabix, path_to_reference_fasta, monkeypatch,
-                    caplog):
+                    path_to_bcftools, path_to_tabix, path_to_reference_fasta,
+                    monkeypatch, caplog):
 
     caplog.set_level(logging.DEBUG)
 
@@ -37,6 +37,7 @@ def test_merge_vcfs(tmpdir, path_to_java, path_to_gatk3, path_to_bgzip,
     merge_vcfs(gzipped_copies,
                outlabel=outlabel1,
                gzip_output=True,
+               path_to_bcftools=path_to_bcftools,
                path_to_java=path_to_java,
                path_to_tabix=path_to_tabix,
                path_to_gatk3=path_to_gatk3,
@@ -63,6 +64,7 @@ def test_merge_vcfs(tmpdir, path_to_java, path_to_gatk3, path_to_bgzip,
     merge_vcfs(gzipped_copies,
                outlabel=outlabel2,
                gzip_output=False,
+               path_to_bcftools=path_to_bcftools,
                path_to_java=path_to_java,
                path_to_tabix=path_to_tabix,
                path_to_gatk3=path_to_gatk3,
