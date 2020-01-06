@@ -4,6 +4,11 @@ All changes to the public API of this tool will be documented here.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.1]
+
+Adds an option to use local files instead of fetching the regions from the
+1KG servers.
+
 ## [2.0]
 
 Major refactor. Fixed chromosome Y issues when merging VCFs. Now running

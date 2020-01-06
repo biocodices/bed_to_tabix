@@ -1,7 +1,7 @@
 PACKAGE_INFO = dict(
     PROGRAM_NAME = 'bed_to_tabix',
     DESCRIPTION = 'Download the 1kG genotypes of the regions in a .bed file',
-    VERSION = '2.0',
+    VERSION = '2.1',
     DATE = '28 Dec 2018',
     # DATE = '20 Nov 2016',
     AUTHOR = 'Juan Manuel Berros',

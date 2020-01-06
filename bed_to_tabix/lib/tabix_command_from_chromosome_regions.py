@@ -9,11 +9,13 @@ def tabix_command_from_chromosome_regions(regions_df,
                                           path_to_bgzip,
                                           path_to_bcftools,
                                           remove_SVs=False,
+                                          local_dir=None,
                                           http=False):
     """
     Generate a tabix command to download the regions present in regions_df
     from The 1000 Genomes Project servers via FTP or HTTP. Requires that all
-    regions are located in the same chromosome.
+    regions are located in the same chromosome. If *local_dir* is provided,
+    the files are searched in a local directory instead of 1KG servers.
 
     Set remove_SVs=True to remove the structural variants.
 
@@ -32,7 +34,11 @@ def tabix_command_from_chromosome_regions(regions_df,
     # Define the destination VCF filename for this chromosome
     dest_file = temp_filepath(f'chr_{chrom}.vcf.gz')
 
-    chrom_1kg_url = thousand_genomes_chromosome_url(chrom, http)
+    chrom_1kg_url = thousand_genomes_chromosome_url(
+        chromosome=chrom,
+        local_dir=local_dir,
+        http=http
+    )
     # Generate the tabix command to download 1kG genotypes for these regions
     tabix_command = f'{path_to_tabix} -fh -R {chrom_bedfile} {chrom_1kg_url} | '
     if remove_SVs:

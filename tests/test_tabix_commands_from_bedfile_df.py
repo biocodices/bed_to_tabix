@@ -26,7 +26,8 @@ def test_tabix_commands_from_bedfile_df(path_to_tabix, path_to_bgzip, path_to_bc
         path_to_bgzip=path_to_bgzip,
         path_to_bcftools=path_to_bcftools,
         remove_SVs=True,
-        http=False
+        http=False,
+        local_dir='/path/to/1KG'
     )
 
     assert len(commands_to_run) == 4  # the 4 chromosomes from the regions above
@@ -38,6 +39,7 @@ def test_tabix_commands_from_bedfile_df(path_to_tabix, path_to_bgzip, path_to_bc
         assert all('tabix' in cmd['cmd'] for cmd in commands_to_run)
         assert all('filter' in cmd['cmd'] for cmd in commands_to_run)
         assert all(cmd['dest_file'] in cmd['cmd'] for cmd in commands_to_run)
+        assert all('/path/to/1KG' in cmd['cmd'] for cmd in commands_to_run)
         assert all(isfile(temp_bedfile) for temp_bedfile in temp_bedfiles)
     finally:
         clean_temp_bedfiles(commands_to_run)
