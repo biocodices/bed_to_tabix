@@ -7,6 +7,7 @@ def tabix_commands_from_bedfile_df(bedfile_df,
                                    path_to_bcftools,
                                    remove_SVs=False,
                                    local_dir=None,
+                                   tmp_dir=None,
                                    http=False):
     """
     Generate the tabix commands to download 1000 Genomes genotypes for the
@@ -14,7 +15,8 @@ def tabix_commands_from_bedfile_df(bedfile_df,
     { tabix_command1: destination_file1, tabix_command2: ... }
 
     If *local_dir* is provided, generates paths to local files instead of
-    URLs for the tabix commands.
+    URLs for the tabix commands. If *tmp_dir* is provided, write output files
+    there instead of the system's temp directory.
     """
     commands_to_run = []
     for chrom, regions_df in bedfile_df.groupby('chrom'):
@@ -27,7 +29,8 @@ def tabix_commands_from_bedfile_df(bedfile_df,
             path_to_bcftools=path_to_bcftools,
             remove_SVs=remove_SVs,
             http=http,
-            local_dir=local_dir
+            local_dir=local_dir,
+            tmp_dir=tmp_dir,
         )
         commands_to_run.append(command)
 

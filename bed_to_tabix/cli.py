@@ -34,6 +34,10 @@ Options:
                       files live. It might be a local directory or a URL to
                       fetch from. Omit this to use the servers from 1KG.
 
+    --tmp-dir DIR     Optionally, provide a directory for temporary files
+                      (chromosome VCFs and BEDs). Uses the system tmp dir
+                      by default.
+
     -f --force        If set, it will overwrite the output file if it exists.
 
     --dry-run         If set, it will just print the tabix commands to
@@ -154,7 +158,8 @@ def main():
             path_to_bgzip=arguments['--path-to-bgzip'],
             path_to_reference_fasta=arguments['--path-to-reference-fasta'],
             no_cleanup=arguments['--no-cleanup'],
-            local_dir=arguments['--local-dir']
+            local_dir=arguments['--local-dir'],
+            tmp_dir=arguments['--tmp-dir']
             # The FTP option is failing and is not fixed yet:
             # http=arguments['--http'],
         )

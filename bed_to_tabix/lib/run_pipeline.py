@@ -31,6 +31,7 @@ def run_pipeline(bedfiles,
                  dry_run=False,
                  no_cleanup=False,
                  local_dir=None,
+                 tmp_dir=None,
                  http=True):
     """
     Take a list of BED files and produce one (or one per chrom) VCF file with
@@ -52,6 +53,8 @@ def run_pipeline(bedfiles,
       1000 Genomes VCFs.
     - local_dir: Optionally, provide a local directory where the 1KG files
       live. This option is faster than the default, which is to use 1KG servers.
+    - tmp_dir: Optionally, provide a directory for the temporary files
+      (i.e. chromosome beds and vcfs). Uses /tmp by default.
     - path_to...: path to executables of {bcftools,tabix,bgzip,gatk3,java}.
     - path_to_reference_fasta: path to the reference .fasta that will be used
       internally by GATK3 CombineVariants to merge 1KG VCFs.
@@ -79,11 +82,8 @@ def run_pipeline(bedfiles,
 
     regions = merge_beds(bedfiles)
 
-    logger.info('Expand zero-length regions.')
-    regions = expand_zero_length_regions(regions)
-
-    msg = ('Found {n_regions} regions in {n_chromosomes} chromosomes, '
-           'spanning {total_bases} bases.')
+    msg = ('Found {n_regions:,} regions in {n_chromosomes} chromosomes, '
+           'spanning {total_bases:,} bases.')
     logger.info(msg.format(**bed_stats(regions)))
 
     bed_out = f'{outlabel}.merged-sorted-expanded.bed'
@@ -98,6 +98,7 @@ def run_pipeline(bedfiles,
         path_to_bcftools=path_to_bcftools,
         remove_SVs=remove_SVs,
         local_dir=local_dir,
+        tmp_dir=tmp_dir,
         http=http,
     )
 

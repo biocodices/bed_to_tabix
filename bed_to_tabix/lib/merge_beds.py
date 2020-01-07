@@ -15,5 +15,6 @@ def merge_beds(bedfiles):
     regions.drop_duplicates(subset=BED_COLUMNS[:3], inplace=True)
     logger.debug(f'{len(regions)} unique regions after removing duplicates.')
 
+    logger.debug('Sorting the regions by position')
     regions.sort_values(by=BED_COLUMNS, inplace=True)
     return regions

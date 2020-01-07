@@ -16,7 +16,10 @@ def test_tabix_command_from_chromosome_regions(path_to_tabix, path_to_bgzip,
         path_to_bcftools=path_to_bcftools,
         remove_SVs=True,
         http=True,
-        local_dir='/path/to/1KG'
+        local_dir='/path/to/1KG',
+
+        # FIXME: this dir must exist for the test to work:
+        tmp_dir='/tmp',
     )
 
     assert re.search(
@@ -26,8 +29,8 @@ def test_tabix_command_from_chromosome_regions(path_to_tabix, path_to_bgzip,
     assert result['chrom_bedfile'].endswith('chr_1.bed')
     assert result['dest_file'].endswith('chr_1.vcf.gz')
     assert result['chromosome'] == '1'
-    assert '/path/to/1KG' in result['cmd']
-    assert 'ftp.1000genomes.ebi.ac.uk' not in result['cmd']
+    assert '/tmp' in result['cmd']
+    assert '/tmp' in result['chrom_bedfile']
 
     result = tabix_command_from_chromosome_regions(
         regions,
